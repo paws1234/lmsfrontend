@@ -22,6 +22,10 @@ import SubjectEdit from "../views/teacher/SubjectEdit.vue";
 import StudentDashboard from "../views/StudentDashboard.vue";
 import EnrollmentForm from '../views/teacher/EnrollmentForm.vue';
 import EnrollmentList from '../views/teacher/EnrollmentList.vue';
+import TodoList from '../views/teacher/TodoList.vue';
+import TodoCreate from '../views/teacher/TodoCreate.vue';
+import TodoEdit from '../views/teacher/TodoEdit.vue';
+
 const routes = [
   { path: "/", name: "Home", component: Home },
   { path: "/login", name: "Login", component: Login },
@@ -32,91 +36,44 @@ const routes = [
     component: AdminLayout,
     children: [
       { path: "dashboard", name: "AdminDashboard", component: AdminDashboard },
-      { path: "students", component: StudentList },
-      { path: "students/create", component: StudentForm },
-      { path: "students/:id", component: StudentForm },
-      { path: "students/:id/edit", component: StudentForm },
+      { path: "students", name: "StudentList", component: StudentList },
+      { path: "students/create", name: "StudentCreate", component: StudentForm },
+      { path: "students/:id", name: "StudentShow", component: StudentForm },
+      { path: "students/:id/edit", name: "StudentEdit", component: StudentForm },
 
       { path: "teachers", name: "TeacherList", component: TeacherList },
-      {
-        path: "teachers/create",
-        name: "TeacherCreate",
-        component: TeacherForm,
-      },
+      { path: "teachers/create", name: "TeacherCreate", component: TeacherForm },
       { path: "teachers/:id", name: "TeacherShow", component: TeacherUpdate },
-      {
-        path: "teachers/:id/edit",
-        name: "TeacherEdit",
-        component: TeacherForm,
-      },
-       {
-      path: 'courses',
-      name: 'CourseList',
-      component: CourseList
-    },
-    {
-      path: 'courses/create',
-      name: 'CourseCreate',
-      component: CourseCreate
-    },
-    {
-      path: 'courses/:id/edit',
-      name: 'CourseEdit',
-      component: CourseEdit
-      },
-      { path: 'schedules', component: ScheduleManager },
-       {
-    path: 'event-handlers',
-    name: 'EventHandlerManager',
-    component: EventHandlerManager,
-      },
-    
+      { path: "teachers/:id/edit", name: "TeacherEdit", component: TeacherForm },
+
+      { path: 'courses', name: 'CourseList', component: CourseList },
+      { path: 'courses/create', name: 'CourseCreate', component: CourseCreate },
+      { path: 'courses/:id/edit', name: 'CourseEdit', component: CourseEdit },
+
+      { path: 'schedules', name: 'ScheduleManager', component: ScheduleManager },
+      { path: 'event-handlers', name: 'EventHandlerManager', component: EventHandlerManager },
     ],
   },
 
-{
+  {
     path: "/teacher",
     component: TeacherLayout,
     children: [
       { path: "dashboard", name: "TeacherDashboard", component: TeacherDashboard },
-  {
-    path: 'subjects',
-    name: 'SubjectList',
-    component: SubjectList,
-  },
-  {
-    path: 'subjects/create',
-    name: 'SubjectCreate',
-    component: SubjectCreate,
-  },
-  {
-    path: 'subjects/:id/edit',
-    name: 'SubjectEdit',
-    component: SubjectEdit,
-    props: true,
-      },
-   {
-    path: 'enrollments',
-    name: 'EnrollmentList',
-    component: EnrollmentList,
-    props: true,
-      },
-    {
-    path: 'enrollments/create',
-    name: 'EnrollmentForm',
-    component: EnrollmentForm,
-    props: true,
-  },
+      { path: 'subjects', name: 'SubjectList', component: SubjectList },
+      { path: 'subjects/create', name: 'SubjectCreate', component: SubjectCreate },
+      { path: 'subjects/:id/edit', name: 'SubjectEdit', component: SubjectEdit, props: true },
 
+      { path: 'enrollments', name: 'EnrollmentList', component: EnrollmentList },
+      { path: 'enrollments/create', name: 'EnrollmentCreate', component: EnrollmentForm },
+
+      { path: 'todos', name: 'TodoList', component: TodoList },
+      { path: 'todos/create', name: 'TodoCreate', component: TodoCreate },
+      { path: 'todos/:id/edit', name: 'TodoEdit', component: TodoEdit, props: true },
     ],
   },
-  
-  {
-    path: "/student/dashboard",
-    name: "StudentDashboard",
-    component: StudentDashboard,
-  },
 
+  { path: "/student/dashboard", name: "StudentDashboard", component: StudentDashboard },
 ];
 
 const router = createRouter({

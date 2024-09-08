@@ -38,15 +38,25 @@
             <router-link
               to="/teacher/subjects"
               class="block px-4 py-2 rounded-md text-gray-300 hover:text-white hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-shadow duration-300 ease-in-out hover:shadow-lg hover:shadow-blue-500/70"
-              >Subjects</router-link
             >
+              Subjects
+            </router-link>
           </li>
           <li>
             <router-link
               to="/teacher/enrollments"
               class="block px-4 py-2 rounded-md text-gray-300 hover:text-white hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-shadow duration-300 ease-in-out hover:shadow-lg hover:shadow-blue-500/70"
-              >Enrollments</router-link
             >
+              Enrollments
+            </router-link>
+          </li>
+          <li>
+            <router-link
+              to="/teacher/todos"
+              class="block px-4 py-2 rounded-md text-gray-300 hover:text-white hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-shadow duration-300 ease-in-out hover:shadow-lg hover:shadow-blue-500/70"
+            >
+              TODOs
+            </router-link>
           </li>
           <button
             @click="logout"
