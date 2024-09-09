@@ -150,7 +150,7 @@ export default {
   name: "ScheduleManager",
   setup() {
     const schedules = ref([]);
-    const teachers = ref([]);
+    const teachers = ref([]); 
     const form = ref({
       day: "",
       time_in: "",
@@ -267,7 +267,6 @@ export default {
   },
 };
 </script>
-
 <style scoped>
 .loader {
   border: 4px solid rgba(0, 0, 0, 0.1);
