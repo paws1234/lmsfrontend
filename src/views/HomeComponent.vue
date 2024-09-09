@@ -37,7 +37,7 @@
 
     <footer class="w-full bg-yellow-800 text-white py-4">
       <div class="container mx-auto text-center">
-        <p>&copy; 2024 LMS Platform. All rights reserved.</p>
+        <p>&copy; {{ currentYear }} LMS Platform. All rights reserved.</p>
       </div>
     </footer>
   </div>
@@ -46,6 +46,11 @@
 <script>
 export default {
   name: "HomeComponent",
+  data() {
+    return {
+      currentYear: new Date().getFullYear(), 
+    };
+  },
 };
 </script>
 
