@@ -188,8 +188,6 @@ export default {
         error.value = true;
       }
     };
-
-
     const saveSchedule = async () => {
       const url = isEditing.value
         ? `/admin/schedules/${currentScheduleId.value}`
