@@ -29,9 +29,7 @@
         {{ isEditing ? "Edit Schedule" : "Add New Schedule" }}
       </h2>
       <div class="mb-6">
-        <label for="day" class="block text-gray-700 text-lg font-medium"
-          >Day</label
-        >
+        <label for="day" class="block text-gray-700 text-lg font-medium">Day</label>
         <select
           v-model="form.day"
           id="day"
@@ -48,9 +46,7 @@
         </select>
       </div>
       <div class="mb-6">
-        <label for="time_in" class="block text-gray-700 text-lg font-medium"
-          >Time In</label
-        >
+        <label for="time_in" class="block text-gray-700 text-lg font-medium">Time In</label>
         <input
           v-model="form.time_in"
           type="time"
@@ -60,9 +56,7 @@
         />
       </div>
       <div class="mb-6">
-        <label for="time_out" class="block text-gray-700 text-lg font-medium"
-          >Time Out</label
-        >
+        <label for="time_out" class="block text-gray-700 text-lg font-medium">Time Out</label>
         <input
           v-model="form.time_out"
           type="time"
@@ -72,9 +66,7 @@
         />
       </div>
       <div class="mb-6">
-        <label for="room_name" class="block text-gray-700 text-lg font-medium"
-          >Room</label
-        >
+        <label for="room_name" class="block text-gray-700 text-lg font-medium">Room</label>
         <input
           v-model="form.room"
           type="text"
@@ -84,16 +76,19 @@
         />
       </div>
       <div class="mb-6">
-        <label for="teacher" class="block text-gray-700 text-lg font-medium"
-          >Teacher</label
-        >
-        <input
+        <label for="teacher" class="block text-gray-700 text-lg font-medium">Teacher</label>
+        <select
           v-model="form.teacher_id"
-          type="text"
           id="teacher"
           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
           required
-        />
+        >
+          <option value="" disabled>Select a teacher</option>
+          <option v-for="teacher in teachers" :key="teacher.id" :value="teacher.id">
+            {{ teacher.name }}
+          </option>
+        </select>
+
       </div>
       <button
         type="submit"
@@ -146,6 +141,7 @@
     </p>
   </div>
 </template>
+
 <script>
 import axios from "@/axios";
 import { ref, onMounted } from "vue";
@@ -180,6 +176,18 @@ export default {
         loading.value = false;
       }
     };
+
+    const fetchTeachers = async () => {
+      try {
+        const response = await axios.get("/admin/teachers");
+        teachers.value = response.data.teachers; // Update this line to access teachers from the response
+        console.log("Teachers fetched:", teachers.value);
+      } catch (err) {
+        console.error("Error fetching teachers:", err);
+        error.value = true;
+      }
+    };
+
 
     const saveSchedule = async () => {
       const url = isEditing.value
@@ -239,7 +247,10 @@ export default {
       }
     };
 
-    onMounted(fetchSchedules);
+    onMounted(async () => {
+      await fetchSchedules();
+      await fetchTeachers();
+    });
 
     return {
       schedules,
@@ -259,10 +270,10 @@ export default {
 <style scoped>
 .loader {
   border: 4px solid rgba(0, 0, 0, 0.1);
-  border-left-color: #3498db;
+  border-left-color: transparent;
   border-radius: 50%;
-  width: 40px;
-  height: 40px;
+  width: 2rem;
+  height: 2rem;
   animation: spin 1s linear infinite;
 }
 
