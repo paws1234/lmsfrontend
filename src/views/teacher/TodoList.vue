@@ -1,8 +1,6 @@
 <template>
   <div class="p-6 bg-gray-100 min-h-screen">
     <h2 class="text-2xl font-bold mb-4">TODO List</h2>
-
-    <!-- Search Input -->
     <div class="mb-4">
       <input
         v-model="searchQuery"
@@ -11,8 +9,6 @@
         class="p-2 border border-gray-300 rounded-md w-full max-w-md"
       />
     </div>
-
-    <!-- TODO List Table -->
     <div class="overflow-x-auto bg-white shadow-md rounded-lg">
       <table class="w-full text-left border-collapse">
         <thead>
@@ -39,7 +35,7 @@
                 :key="file"
                 :href="`/uploads/${file}`"
                 class="text-blue-500 hover:underline"
-                target="_blank"
+                download
               >
                 {{ file }}
               </a>
