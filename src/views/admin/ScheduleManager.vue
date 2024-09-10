@@ -266,7 +266,7 @@ export default {
 
     return {
       schedules,
-      teachers, 
+      teachers,
       form,
       isEditing,
       saveSchedule,

@@ -35,7 +35,6 @@
                 Edit
               </button>
               <button
-
                 class="text-red-500 hover:underline"
                 @click="deleteEnrollment(enrollment.id)"
               >
@@ -54,7 +53,6 @@
         Create Enrollment
       </button>
     </router-link>
-
 
     <div
       v-if="editingEnrollment"
