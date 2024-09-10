@@ -48,7 +48,7 @@ export default {
   name: "HomeComponent",
   data() {
     return {
-      currentYear: new Date().getFullYear(),
+      currentYear: new Date().getFullYear(), 
     };
   },
 };

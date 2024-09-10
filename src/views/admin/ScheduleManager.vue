@@ -163,7 +163,8 @@ export default {
   name: "ScheduleManager",
   setup() {
     const schedules = ref([]);
-    const teachers = ref([]);
+    const teachers = ref([]); 
+
     const form = ref({
       day: "",
       time_in: "",
@@ -194,7 +195,7 @@ export default {
     const fetchTeachers = async () => {
       try {
         const response = await axios.get("/admin/teachers");
-        teachers.value = response.data.teachers; // Update this line to access teachers from the response
+        teachers.value = response.data.teachers;
         console.log("Teachers fetched:", teachers.value);
       } catch (err) {
         console.error("Error fetching teachers:", err);
@@ -266,7 +267,7 @@ export default {
 
     return {
       schedules,
-      teachers,
+      teachers, 
       form,
       isEditing,
       saveSchedule,
