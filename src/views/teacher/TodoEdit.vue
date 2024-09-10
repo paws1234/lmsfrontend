@@ -38,8 +38,8 @@
         <label class="block mb-2 text-gray-700">File</label>
         <input
           type="file"
-          @change="handleFileUpload"
           class="p-2 border border-gray-300 rounded-md"
+          @change="handleFileUpload"
         />
       </div>
 
@@ -107,13 +107,16 @@ export default {
               headers: {
                 "Content-Type": "application/json",
               },
-            }
+            },
           );
 
           console.log("Response:", response.data);
           router.push({ name: "TodoList" });
         } catch (error) {
-          console.error("Error updating todo:", error.response?.data || error.message);
+          console.error(
+            "Error updating todo:",
+            error.response?.data || error.message,
+          );
         }
       }
     };

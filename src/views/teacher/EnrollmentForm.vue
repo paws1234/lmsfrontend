@@ -2,8 +2,8 @@
   <div class="p-6 bg-gray-50 min-h-screen flex flex-col items-center">
     <h2 class="text-3xl font-bold mb-6 text-gray-800">Create Enrollment</h2>
     <form
-      @submit.prevent="createEnrollment"
       class="w-full max-w-lg bg-white shadow-lg rounded-lg p-8"
+      @submit.prevent="createEnrollment"
     >
       <div class="mb-4">
         <label
@@ -13,8 +13,8 @@
         >
         <select
           v-model="form.student_id"
-          @change="updateStudentName"
           class="block w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+          @change="updateStudentName"
         >
           <option disabled value="">Select a student</option>
           <option
@@ -34,8 +34,8 @@
         >
         <select
           v-model="form.subject_id"
-          @change="updateSubjectTitle"
           class="block w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+          @change="updateSubjectTitle"
         >
           <option disabled value="">Select a subject</option>
           <option
@@ -71,6 +71,7 @@
 import axios from "@/axios";
 
 export default {
+  emits: ["enrollmentCreated"],
   data() {
     return {
       form: {
@@ -110,13 +111,13 @@ export default {
     },
     updateStudentName() {
       const selectedStudent = this.students.find(
-        (student) => student.id === this.form.student_id
+        (student) => student.id === this.form.student_id,
       );
       this.student_name = selectedStudent ? selectedStudent.name : "";
     },
     updateSubjectTitle() {
       const selectedSubject = this.subjects.find(
-        (subject) => subject.id === this.form.subject_id
+        (subject) => subject.id === this.form.subject_id,
       );
       this.subject_title = selectedSubject ? selectedSubject.title : "";
     },

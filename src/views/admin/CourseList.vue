@@ -22,7 +22,6 @@
       Error loading courses. Please try again later.
     </p>
 
-   
     <p
       v-if="!loading && !error && !courses.length"
       class="text-gray-600 text-lg font-medium text-center mb-6"
@@ -30,7 +29,6 @@
       No courses found.
     </p>
 
-    
     <div v-if="courses.length" class="bg-white p-6 rounded-lg shadow-md">
       <ul class="space-y-4">
         <li
@@ -52,8 +50,8 @@
               Edit
             </router-link>
             <button
-              @click="deleteCourse(course.id)"
               class="bg-red-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 transition duration-150"
+              @click="deleteCourse(course.id)"
             >
               Delete
             </button>
@@ -84,7 +82,7 @@ export default {
       this.error = false;
       try {
         const response = await axios.get("/admin/courses");
-        this.courses = response.data.courses; 
+        this.courses = response.data.courses;
       } catch (error) {
         console.error("Error fetching courses:", error);
         this.error = true;
@@ -96,7 +94,7 @@ export default {
       if (confirm("Are you sure you want to delete this course?")) {
         try {
           await axios.delete(`/admin/courses/${id}`);
-          this.fetchCourses(); 
+          this.fetchCourses();
         } catch (error) {
           console.error("Error deleting course:", error);
           this.error = true;
@@ -108,7 +106,6 @@ export default {
 </script>
 
 <style scoped>
-
 @keyframes spin {
   0% {
     transform: rotate(0deg);
@@ -118,16 +115,14 @@ export default {
   }
 }
 
-
 .loader {
-  border: 8px solid #f3f3f3; 
-  border-top: 8px solid #3498db; 
+  border: 8px solid #f3f3f3;
+  border-top: 8px solid #3498db;
   border-radius: 50%;
   width: 80px;
   height: 80px;
   animation: spin 1.5s linear infinite;
 }
-
 
 input:focus,
 textarea:focus,

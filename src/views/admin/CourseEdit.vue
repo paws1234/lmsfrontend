@@ -4,7 +4,7 @@
       <h1 class="text-3xl font-bold mb-6 text-gray-900 text-center">
         Edit Course
       </h1>
-      <form @submit.prevent="updateCourse" class="space-y-6">
+      <form class="space-y-6" @submit.prevent="updateCourse">
         <div class="mb-4">
           <label
             class="block text-gray-700 text-sm font-medium mb-2"

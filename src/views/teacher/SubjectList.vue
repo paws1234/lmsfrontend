@@ -24,7 +24,10 @@
     </div>
 
     <div v-else>
-      <div v-if="filteredSubjects.length === 0" class="text-gray-500 text-center">
+      <div
+        v-if="filteredSubjects.length === 0"
+        class="text-gray-500 text-center"
+      >
         No subjects available.
       </div>
       <table
@@ -50,8 +53,8 @@
                 Edit
               </router-link>
               <button
-                @click="deleteSubject(subject.id)"
                 class="ml-4 text-red-500 hover:underline"
+                @click="deleteSubject(subject.id)"
               >
                 Delete
               </button>
@@ -98,9 +101,10 @@ export default {
 
     const filteredSubjects = computed(() => {
       const query = searchQuery.value.toLowerCase();
-      return subjects.value.filter(subject =>
-        subject.title.toLowerCase().includes(query) ||
-        subject.description.toLowerCase().includes(query)
+      return subjects.value.filter(
+        (subject) =>
+          subject.title.toLowerCase().includes(query) ||
+          subject.description.toLowerCase().includes(query),
       );
     });
 
@@ -111,7 +115,7 @@ export default {
       loading,
       searchQuery,
       deleteSubject,
-      filteredSubjects
+      filteredSubjects,
     };
   },
 };

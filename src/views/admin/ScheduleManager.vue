@@ -15,24 +15,26 @@
       Error loading schedules. Please try again later.
     </p>
     <button
-      @click="toggleForm"
       class="bg-blue-600 text-white px-6 py-3 rounded-md shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150 mb-6"
+      @click="toggleForm"
     >
       {{ showForm ? "Hide Form" : "Add New Schedule" }}
     </button>
     <form
       v-if="showForm"
-      @submit.prevent="saveSchedule"
       class="bg-white p-8 rounded-lg shadow-md mb-6"
+      @submit.prevent="saveSchedule"
     >
       <h2 class="text-xl font-semibold mb-4 text-gray-800">
         {{ isEditing ? "Edit Schedule" : "Add New Schedule" }}
       </h2>
       <div class="mb-6">
-        <label for="day" class="block text-gray-700 text-lg font-medium">Day</label>
+        <label for="day" class="block text-gray-700 text-lg font-medium"
+          >Day</label
+        >
         <select
-          v-model="form.day"
           id="day"
+          v-model="form.day"
           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
           required
         >
@@ -46,49 +48,60 @@
         </select>
       </div>
       <div class="mb-6">
-        <label for="time_in" class="block text-gray-700 text-lg font-medium">Time In</label>
+        <label for="time_in" class="block text-gray-700 text-lg font-medium"
+          >Time In</label
+        >
         <input
+          id="time_in"
           v-model="form.time_in"
           type="time"
-          id="time_in"
           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
           required
         />
       </div>
       <div class="mb-6">
-        <label for="time_out" class="block text-gray-700 text-lg font-medium">Time Out</label>
+        <label for="time_out" class="block text-gray-700 text-lg font-medium"
+          >Time Out</label
+        >
         <input
+          id="time_out"
           v-model="form.time_out"
           type="time"
-          id="time_out"
           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
           required
         />
       </div>
       <div class="mb-6">
-        <label for="room_name" class="block text-gray-700 text-lg font-medium">Room</label>
+        <label for="room_name" class="block text-gray-700 text-lg font-medium"
+          >Room</label
+        >
         <input
+          id="room_name"
           v-model="form.room"
           type="text"
-          id="room_name"
           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
           required
         />
       </div>
       <div class="mb-6">
-        <label for="teacher" class="block text-gray-700 text-lg font-medium">Teacher</label>
+        <label for="teacher" class="block text-gray-700 text-lg font-medium"
+          >Teacher</label
+        >
         <select
-          v-model="form.teacher_id"
           id="teacher"
+          v-model="form.teacher_id"
           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
           required
         >
           <option value="" disabled>Select a teacher</option>
-          <option v-for="teacher in teachers" :key="teacher.id" :value="teacher.id">
+          <option
+            v-for="teacher in teachers"
+            :key="teacher.id"
+            :value="teacher.id"
+          >
             {{ teacher.name }}
           </option>
         </select>
-
       </div>
       <button
         type="submit"
@@ -118,14 +131,14 @@
           </div>
           <div class="ml-4 flex-shrink-0 space-x-4">
             <button
-              @click="editSchedule(schedule)"
               class="text-blue-600 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150"
+              @click="editSchedule(schedule)"
             >
               Edit
             </button>
             <button
-              @click="deleteSchedule(schedule.id)"
               class="bg-red-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 transition duration-150"
+              @click="deleteSchedule(schedule.id)"
             >
               Delete
             </button>
@@ -150,7 +163,7 @@ export default {
   name: "ScheduleManager",
   setup() {
     const schedules = ref([]);
-    const teachers = ref([]); 
+    const teachers = ref([]);
     const form = ref({
       day: "",
       time_in: "",

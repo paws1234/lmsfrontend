@@ -14,17 +14,17 @@
       Error updating data. Please try again later.
     </div>
     <form
-      @submit.prevent="submitForm"
       class="bg-white p-8 rounded-lg shadow-md w-full max-w-lg"
+      @submit.prevent="submitForm"
     >
       <div class="mb-6">
         <label for="name" class="block text-gray-700 text-lg font-medium mb-2">
           Name
         </label>
         <input
+          id="name"
           v-model="teacher.name"
           type="text"
-          id="name"
           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
           required
         />
@@ -34,9 +34,9 @@
           Email
         </label>
         <input
+          id="email"
           v-model="teacher.email"
           type="email"
-          id="email"
           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
           required
         />
@@ -49,9 +49,9 @@
           Password
         </label>
         <input
+          id="password"
           v-model="teacher.password"
           type="password"
-          id="password"
           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
         />
       </div>
@@ -110,7 +110,7 @@ export default {
       try {
         await axios.put(
           `/admin/teachers/${this.$route.params.id}`,
-          this.teacher
+          this.teacher,
         );
         this.$router.push("/admin/teachers");
       } catch (error) {

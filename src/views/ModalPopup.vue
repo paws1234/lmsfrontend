@@ -8,14 +8,14 @@
       <p class="mb-6">{{ message }}</p>
       <div class="flex justify-end space-x-4">
         <button
-          @click="confirmAction"
           class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150"
+          @click="confirmAction"
         >
           Confirm
         </button>
         <button
-          @click="cancelAction"
           class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 transition duration-150"
+          @click="cancelAction"
         >
           Cancel
         </button>
@@ -40,6 +40,7 @@ export default {
       default: "Are you sure?",
     },
   },
+  emits: ["confirm", "cancel"], // Corrected double quotes here
   methods: {
     confirmAction() {
       this.$emit("confirm");

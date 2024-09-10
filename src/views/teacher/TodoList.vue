@@ -48,8 +48,8 @@
                 Edit
               </router-link>
               <button
-                @click="deleteTodo(todo.id)"
                 class="ml-4 text-red-500 hover:underline"
+                @click="deleteTodo(todo.id)"
               >
                 Delete
               </button>
@@ -103,7 +103,7 @@ export default {
       return todos.value.filter(
         (todo) =>
           todo.title.toLowerCase().includes(query) ||
-          todo.description.toLowerCase().includes(query)
+          todo.description.toLowerCase().includes(query),
       );
     });
 

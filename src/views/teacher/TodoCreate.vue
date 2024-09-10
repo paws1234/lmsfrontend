@@ -36,8 +36,8 @@
       <div class="mb-4">
         <input
           type="file"
-          @change="handleFileUpload"
           class="p-2 border border-gray-300 rounded-md"
+          @change="handleFileUpload"
         />
       </div>
 
@@ -91,7 +91,7 @@ export default {
       } catch (error) {
         console.error(
           "Error creating todo:",
-          error.response ? error.response.data : error.message
+          error.response ? error.response.data : error.message,
         );
         if (error.response) {
           console.error("Response status:", error.response.status);

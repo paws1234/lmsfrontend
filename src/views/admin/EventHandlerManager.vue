@@ -16,16 +16,16 @@
     </p>
 
     <button
-      @click="toggleForm"
       class="bg-blue-600 text-white px-6 py-3 rounded-md shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150 mb-6"
+      @click="toggleForm"
     >
       {{ showForm ? "Hide Form" : "Add New Event" }}
     </button>
 
     <form
       v-if="showForm"
-      @submit.prevent="saveEventHandler"
       class="bg-white p-8 rounded-lg shadow-md mb-6"
+      @submit.prevent="saveEventHandler"
     >
       <h2 class="text-xl font-semibold mb-4 text-gray-800">
         {{ isEditing ? "Edit Event Handler" : "Add New Event Handler" }}
@@ -35,9 +35,9 @@
           Name
         </label>
         <input
+          id="name"
           v-model="form.name"
           type="text"
-          id="name"
           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
           required
         />
@@ -50,8 +50,8 @@
           Description
         </label>
         <textarea
-          v-model="form.description"
           id="description"
+          v-model="form.description"
           rows="4"
           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
           required
@@ -62,9 +62,9 @@
           Event Date
         </label>
         <input
+          id="event_date"
           v-model="form.date"
           type="date"
-          id="event_date"
           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
           required
         />
@@ -95,14 +95,14 @@
           </div>
           <div class="ml-4 flex-shrink-0 space-x-4">
             <button
-              @click="editEventHandler(eventHandler)"
               class="text-blue-600 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150"
+              @click="editEventHandler(eventHandler)"
             >
               Edit
             </button>
             <button
-              @click="deleteEventHandler(eventHandler.id)"
               class="bg-red-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 transition duration-150"
+              @click="deleteEventHandler(eventHandler.id)"
             >
               Delete
             </button>
