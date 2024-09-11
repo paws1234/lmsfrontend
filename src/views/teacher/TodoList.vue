@@ -30,15 +30,16 @@
             <td class="py-2 px-4">{{ todo.title }}</td>
             <td class="py-2 px-4">{{ todo.description }}</td>
             <td class="py-2 px-4">
+              <!-- Check if file exists -->
               <a
-                v-for="file in todo.files"
-                :key="file"
-                :href="`/uploads/${file}`"
+                v-if="todo.file"
+                :href="todo.file"
                 class="text-blue-500 hover:underline"
                 download
               >
-                {{ file }}
+                View Attachment
               </a>
+              <span v-else>No attachment</span>
             </td>
             <td class="py-2 px-4 text-center">
               <router-link
@@ -82,6 +83,7 @@ export default {
       try {
         const response = await axios.get("/teacher/todos");
         todos.value = response.data;
+        console.log('Todos:', todos.value); 
       } catch (error) {
         console.error("Error fetching todos:", error);
       }

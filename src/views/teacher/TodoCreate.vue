@@ -50,52 +50,96 @@
     </form>
   </div>
 </template>
-
 <script>
 import axios from "@/axios";
 import { ref } from "vue";
+import { useRouter } from "vue-router";
+
+const BASE_CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/djwydarmv'; 
+const UPLOAD_PRESET = 'pawscloudinary'; 
 
 export default {
   setup() {
+    const router = useRouter(); 
     const todo = ref({
-      type: "personal",
-      title: "",
-      description: "",
+      type: 'personal',
+      title: '',
+      description: '',
       file: null,
+      fileUrl: ''
     });
 
-    const handleFileUpload = (event) => {
+    const getResourceType = (file) => {
+      const fileType = file.type;
+      if (fileType.startsWith('image/')) {
+        return 'image';
+      } else if (fileType.startsWith('video/')) {
+        return 'video';
+      } else {
+        return 'raw'; 
+      }
+    };
+
+    const handleFileUpload = async (event) => {
       const file = event.target.files[0];
-      todo.value.file = file;
-      console.log("File selected:", file);
+      if (file) {
+        todo.value.file = file;
+        try {
+          const resourceType = getResourceType(file);
+          const cloudinaryUrl = `${BASE_CLOUDINARY_URL}/${resourceType}/upload`;
+
+          const url = await uploadToCloudinary(file, cloudinaryUrl);
+          todo.value.fileUrl = url;
+        } catch (error) {
+          console.error('Error uploading file:', error);
+        }
+      }
+    };
+
+    const uploadToCloudinary = async (file, cloudinaryUrl) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', UPLOAD_PRESET);
+
+      const response = await fetch(cloudinaryUrl, {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to upload ${file.type}`);
+      }
+
+      const data = await response.json();
+      return data.secure_url; 
     };
 
     const createTodo = async () => {
       try {
         const formData = new FormData();
-        formData.append("type", todo.value.type);
-        formData.append("title", todo.value.title);
-        formData.append("description", todo.value.description);
-        if (todo.value.file) {
-          formData.append("file", todo.value.file);
+        formData.append('type', todo.value.type);
+        formData.append('title', todo.value.title);
+        formData.append('description', todo.value.description);
+        if (todo.value.fileUrl) {
+          formData.append('fileUrl', todo.value.fileUrl); 
         }
 
-        const response = await axios.post("/teacher/todos", formData, {
+        const response = await axios.post('/teacher/todos', formData, {
           headers: {
-            "Content-Type": "multipart/form-data",
+            'Content-Type': 'multipart/form-data',
           },
         });
 
-        console.log("Todo created successfully:", response.data);
-        // Redirect or clear form here
+        console.log('Todo created successfully:', response.data);
+        router.push('/teacher/todos');
       } catch (error) {
         console.error(
-          "Error creating todo:",
+          'Error creating todo:',
           error.response ? error.response.data : error.message,
         );
         if (error.response) {
-          console.error("Response status:", error.response.status);
-          console.error("Response headers:", error.response.headers);
+          console.error('Response status:', error.response.status);
+          console.error('Response headers:', error.response.headers);
         }
       }
     };
@@ -108,6 +152,8 @@ export default {
   },
 };
 </script>
+
+
 
 <style scoped>
 /* Add custom styles if needed */
