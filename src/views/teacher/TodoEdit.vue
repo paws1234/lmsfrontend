@@ -58,6 +58,9 @@ import axios from "@/axios";
 import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
+const CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/djwydarmv/image/upload';
+const UPLOAD_PRESET = 'pawscloudinary'; 
+
 export default {
   setup() {
     const route = useRoute();
@@ -67,6 +70,7 @@ export default {
       title: "",
       description: "",
       file: null,
+      fileUrl: ""
     });
 
     onMounted(async () => {
@@ -79,25 +83,47 @@ export default {
       }
     });
 
-    const handleFileUpload = (event) => {
+    const handleFileUpload = async (event) => {
       const file = event.target.files[0];
-      todo.value.file = file ? file.name : null; // Just store the file name for simplicity
+      if (file) {
+        todo.value.file = file;
+        try {
+          const url = await uploadToCloudinary(file);
+          todo.value.fileUrl = url;
+        } catch (error) {
+          console.error('Error uploading file:', error);
+        }
+      }
+    };
+
+    const uploadToCloudinary = async (file) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', UPLOAD_PRESET);
+
+      const response = await fetch(CLOUDINARY_URL, {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to upload image');
+      }
+
+      const data = await response.json();
+      return data.secure_url; 
     };
 
     const handleSubmit = async () => {
       if (validateInput()) {
         try {
           console.log("Updating Todo ID:", route.params.id);
-
-          // Prepare data for update
           const payload = {
             type: todo.value.type,
             title: todo.value.title,
             description: todo.value.description,
-            file: todo.value.file,
+            fileUrl: todo.value.fileUrl, 
           };
-
-          // Log payload for debugging
           console.log("Payload:", payload);
 
           const response = await axios.put(
@@ -138,3 +164,7 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+/* Add custom styles if needed */
+</style>
