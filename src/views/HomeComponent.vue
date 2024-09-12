@@ -72,25 +72,26 @@
           We are delighted to have you here.
         </h3>
 
-        <div class="flex mt-5 sm:relative sm:bottom-10 md:left-20  lg:left-44 md:left-40">
-          <div class="pt-5">
-            <button
-              type="button"
-              class="text-2xl px-6 py-2 min-w-[120px] text-white border--400 rounded bg-blue-900 focus:outline-none focus:ring"
-            >
-              Login
-            </button>
-          </div>
+        <div class="flex mt-5 sm:relative sm:bottom-10 md:left-20 lg:left-44 md:left-40">
+  <div class="pt-5">
+    <router-link
+      to="/login"
+      class="text-2xl px-6 py-2 min-w-[120px] text-white rounded bg-blue-900 focus:outline-none focus:ring"
+    >
+      Login
+    </router-link>
+  </div>
 
-          <div class="pt-5 pl-4">
-            <button
-              type="button"
-              class="text-2xl px-6 py-2 min-w-[120px] text-white border--400 rounded bg-blue-900 focus:outline-none focus:ring"
-            >
-              Register
-            </button>
-          </div>
-        </div>
+  <div class="pt-5 pl-4">
+    <router-link
+      to="/register"
+      class="text-2xl px-6 py-2 min-w-[120px] text-white rounded bg-blue-900 focus:outline-none focus:ring"
+    >
+      Register
+    </router-link>
+  </div>
+</div>
+
       </div>
 
       <!-- Second section with image -->
