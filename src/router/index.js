@@ -19,12 +19,14 @@ import TeacherLayout from "../views/teacher/TeacherLayout.vue";
 import SubjectList from "../views/teacher/SubjectList.vue";
 import SubjectCreate from "../views/teacher/SubjectCreate.vue";
 import SubjectEdit from "../views/teacher/SubjectEdit.vue";
-import StudentDashboard from "../views/StudentDashboard.vue";
+import StudentDashboard from "../views/student/StudentDashboard.vue";
 import EnrollmentForm from "../views/teacher/EnrollmentForm.vue";
 import EnrollmentList from "../views/teacher/EnrollmentList.vue";
 import TodoList from "../views/teacher/TodoList.vue";
 import TodoCreate from "../views/teacher/TodoCreate.vue";
 import TodoEdit from "../views/teacher/TodoEdit.vue";
+import QuestionForm from '../views/teacher/QuestionForm.vue';
+import QuestionList from '../views/teacher/QuestionList.vue';
 
 const routes = [
   { path: "/", name: "Home", component: Home },
@@ -120,6 +122,17 @@ const routes = [
         component: TodoEdit,
         props: true,
       },
+      {
+        path: "questions/create",
+        name: "QuestionCreate",
+        component: QuestionForm,
+      },
+      {
+        path: "questions/list",
+        name: "QuestionList",
+        component: QuestionList,
+      },
+
     ],
   },
 
