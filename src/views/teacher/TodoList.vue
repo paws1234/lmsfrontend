@@ -28,10 +28,10 @@
             :key="todo.id"
             class="border-b hover:bg-gray-50 transition-colors duration-300"
           >
-            <td class="py-3 px-5">{{ todo.type }}</td>
-            <td class="py-3 px-5">{{ todo.title }}</td>
-            <td class="py-3 px-5">{{ todo.description }}</td>
-            <td class="py-3 px-5">
+            <td class="py-2 px-4">{{ todo.type }}</td>
+            <td class="py-2 px-4">{{ todo.title }}</td>
+            <td class="py-2 px-4">{{ todo.description }}</td>
+            <td class="py-2 px-4">
               <a
                 v-if="todo.file"
                 :href="todo.file"
@@ -40,7 +40,9 @@
               >
                 View Attachment
               </a>
-              <span v-else class="text-gray-500">No attachment</span>
+
+              <span v-else>No attachment</span>
+
             </td>
             <td class="py-3 px-5 text-center">
               <router-link
