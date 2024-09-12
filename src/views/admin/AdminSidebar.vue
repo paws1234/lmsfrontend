@@ -1,9 +1,9 @@
 <template>
   <div>
     <button
-      @click="toggleSidebar"
       v-if="!isSidebarOpen"
       class="lg:hidden fixed top-4 left-4 z-50 p-3 text-gray-800 bg-white rounded-md border border-gray-300 shadow-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-500"
+      @click="toggleSidebar"
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -73,8 +73,8 @@
             >
           </li>
           <button
-            @click="logout"
             class="mt-auto w-full py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+            @click="logout"
           >
             Logout
           </button>
@@ -84,8 +84,8 @@
 
     <div
       v-if="isSidebarOpen"
-      @click="toggleSidebar"
       class="overlay lg:hidden"
+      @click="toggleSidebar"
     ></div>
   </div>
 </template>
@@ -114,7 +114,7 @@ export default {
       } catch (error) {
         console.error(
           "Logout error:",
-          error.response?.data?.message || error.message
+          error.response?.data?.message || error.message,
         );
       }
     };

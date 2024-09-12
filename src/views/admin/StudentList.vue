@@ -48,8 +48,8 @@
               Update
             </router-link>
             <button
-              @click="openDeleteModal(student.id)"
               class="bg-red-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 transition duration-150"
+              @click="openDeleteModal(student.id)"
             >
               Delete
             </button>
@@ -59,7 +59,7 @@
     </div>
 
     <Modal
-      :isVisible="showModal"
+      :is-visible="showModal"
       title="Confirm Deletion"
       message="Are you sure you want to delete this student? This action cannot be undone."
       @confirm="handleConfirmDelete"

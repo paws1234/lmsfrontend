@@ -87,7 +87,7 @@ export default {
       } catch (error) {
         console.error(
           "Error fetching student data:",
-          error.response?.data?.message || error.message
+          error.response?.data?.message || error.message,
         );
       }
     };
@@ -99,7 +99,7 @@ export default {
       } catch (error) {
         console.error(
           "Error fetching teacher data:",
-          error.response?.data?.message || error.message
+          error.response?.data?.message || error.message,
         );
       }
     };
@@ -111,7 +111,7 @@ export default {
       } catch (error) {
         console.error(
           "Error fetching course data:",
-          error.response?.data?.message || error.message
+          error.response?.data?.message || error.message,
         );
       }
     };
@@ -123,7 +123,7 @@ export default {
       } catch (error) {
         console.error(
           "Error fetching event handlers:",
-          error.response?.data?.message || error.message
+          error.response?.data?.message || error.message,
         );
       }
     };

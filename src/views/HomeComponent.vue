@@ -114,12 +114,7 @@
 <footer class="bg-blue-900 text-white py-6 mt-20 dark:bg-gray-800 lg:flex lg:justify-between lg:items-center ">
 
       <div class="container mx-auto text-center">
-        <p class="text-sm">&copy; 2024 Cebu Technological University. All rights reserved.</p>
-        <ul class="flex justify-center space-x-4">
-          <li><a href="#" class="hover:text-gray-400">Privacy Policy</a></li>
-          <li><a href="#" class="hover:text-gray-400">Terms of Service</a></li>
-          <li><a href="#" class="hover:text-gray-400">Contact Us</a></li>
-        </ul>
+        <p>&copy; {{ currentYear }} LMS Platform. All rights reserved.</p>
       </div>
     </footer>
     <!-- footer ends -->
@@ -131,32 +126,8 @@ export default {
   name: "HomeComponent",
   data() {
     return {
-      darkMode: false,
+      currentYear: new Date().getFullYear(),
     };
-  },
-  methods: {
-    toggleDarkMode() {
-      this.darkMode = !this.darkMode;
-      if (this.darkMode) {
-        document.documentElement.classList.add("dark");
-        localStorage.setItem("theme", "dark");
-      } else {
-        document.documentElement.classList.remove("dark");
-        localStorage.setItem("theme", "light");
-      }
-    },
-    themeCheck() {
-      const userTheme = localStorage.getItem("theme");
-      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches;
-
-      if (userTheme === "dark" || (!userTheme && systemTheme)) {
-        this.darkMode = true;
-        document.documentElement.classList.add("dark");
-      }
-    },
-  },
-  mounted() {
-    this.themeCheck();
   },
 };
 </script>

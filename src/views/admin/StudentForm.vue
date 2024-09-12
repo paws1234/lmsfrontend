@@ -5,14 +5,14 @@
         {{ isEditing ? "Edit Student" : "Create Student" }}
       </h1>
 
-      <form @submit.prevent="submitForm" class="space-y-6">
+      <form class="space-y-6" @submit.prevent="submitForm">
         <div>
           <label for="name" class="block text-sm font-medium text-gray-700 mb-1"
             >Name</label
           >
           <input
-            v-model="name"
             id="name"
+            v-model="name"
             name="name"
             type="text"
             placeholder="Enter teacher name"
@@ -28,8 +28,8 @@
             >Email</label
           >
           <input
-            v-model="email"
             id="email"
+            v-model="email"
             name="email"
             type="email"
             placeholder="Enter teacher email"
@@ -45,8 +45,8 @@
             >Password</label
           >
           <input
-            v-model="password"
             id="password"
+            v-model="password"
             name="password"
             type="password"
             placeholder="Enter password"
@@ -62,8 +62,8 @@
             >Confirm Password</label
           >
           <input
-            v-model="confirmPassword"
             id="confirmPassword"
+            v-model="confirmPassword"
             name="confirmPassword"
             type="password"
             placeholder="Confirm password"

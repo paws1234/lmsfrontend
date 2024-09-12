@@ -7,9 +7,9 @@
       <div class="mb-4">
         <label for="title" class="block text-gray-700">Title</label>
         <input
-          type="text"
           id="title"
           v-model="form.title"
+          type="text"
           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
           required
         />

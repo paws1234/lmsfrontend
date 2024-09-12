@@ -1,13 +1,14 @@
 <template>
   <div class="p-6 bg-gray-100 min-h-screen">
     <h2 class="text-2xl font-bold mb-4">Edit TODO</h2>
-    <form @submit.prevent="updateTodo">
+    <form @submit.prevent="handleSubmit">
       <div class="mb-4">
         <label class="block mb-2 text-gray-700">Type</label>
         <select
           v-model="todo.type"
           class="p-2 border border-gray-300 rounded-md w-full"
         >
+          <option value="">Select Type</option>
           <option value="personal">Personal</option>
           <option value="work">Work</option>
           <option value="other">Other</option>
@@ -34,10 +35,11 @@
       </div>
 
       <div class="mb-4">
+        <label class="block mb-2 text-gray-700">File</label>
         <input
           type="file"
-          @change="handleFileUpload"
           class="p-2 border border-gray-300 rounded-md"
+          @change="handleFileUpload"
         />
       </div>
 
@@ -56,15 +58,19 @@ import axios from "@/axios";
 import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
+const CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/djwydarmv/image/upload';
+const UPLOAD_PRESET = 'pawscloudinary'; 
+
 export default {
   setup() {
     const route = useRoute();
     const router = useRouter();
     const todo = ref({
-      type: "personal",
+      type: "",
       title: "",
       description: "",
-      file: null, // For handling file upload
+      file: null,
+      fileUrl: ""
     });
 
     onMounted(async () => {
@@ -73,56 +79,87 @@ export default {
         todo.value = response.data;
       } catch (error) {
         console.error("Error fetching todo:", error);
+        alert("Failed to fetch todo. Please try again.");
       }
     });
 
-    const handleFileUpload = (event) => {
+    const handleFileUpload = async (event) => {
       const file = event.target.files[0];
-      todo.value.file = file || null; // Update file if selected, or null if not
-      console.log("File selected:", file);
+      if (file) {
+        todo.value.file = file;
+        try {
+          const url = await uploadToCloudinary(file);
+          todo.value.fileUrl = url;
+        } catch (error) {
+          console.error('Error uploading file:', error);
+        }
+      }
     };
 
-    const updateTodo = async () => {
-      try {
-        const formData = new FormData();
-        formData.append("type", todo.value.type);
-        formData.append("title", todo.value.title);
-        formData.append("description", todo.value.description);
+    const uploadToCloudinary = async (file) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', UPLOAD_PRESET);
 
-        if (todo.value.file) {
-          formData.append("file", todo.value.file);
-        }
+      const response = await fetch(CLOUDINARY_URL, {
+        method: 'POST',
+        body: formData
+      });
 
-        // Debugging output
-        console.log(
-          "FormData to be sent:",
-          Object.fromEntries(formData.entries())
-        );
-
-        const response = await axios.put(
-          `/teacher/todos/${route.params.id}`,
-          formData,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
-            },
-          }
-        );
-
-        console.log("Response:", response.data);
-        router.push({ name: "TodoList" });
-      } catch (error) {
-        console.error(
-          "Error updating todo:",
-          error.response ? error.response.data : error.message
-        );
+      if (!response.ok) {
+        throw new Error('Failed to upload image');
       }
+
+      const data = await response.json();
+      return data.secure_url; 
+    };
+
+    const handleSubmit = async () => {
+      if (validateInput()) {
+        try {
+          console.log("Updating Todo ID:", route.params.id);
+          const payload = {
+            type: todo.value.type,
+            title: todo.value.title,
+            description: todo.value.description,
+            fileUrl: todo.value.fileUrl, 
+          };
+          console.log("Payload:", payload);
+
+          const response = await axios.put(
+            `/teacher/todos/${route.params.id}`,
+            payload,
+            {
+              headers: {
+                "Content-Type": "application/json",
+              },
+            },
+          );
+
+          console.log("Response:", response.data);
+          router.push({ name: "TodoList" });
+        } catch (error) {
+          console.error(
+            "Error updating todo:",
+            error.response?.data || error.message,
+          );
+        }
+      }
+    };
+
+    const validateInput = () => {
+      if (!todo.value.type || !todo.value.title || !todo.value.description) {
+        alert("Please fill in all required fields");
+        return false;
+      }
+      return true;
     };
 
     return {
       todo,
       handleFileUpload,
-      updateTodo,
+      handleSubmit,
+      validateInput,
     };
   },
 };

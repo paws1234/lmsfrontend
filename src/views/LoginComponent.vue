@@ -12,8 +12,8 @@
             >Email</label
           >
           <input
-            v-model="email"
             id="email"
+            v-model="email"
             name="email"
             type="email"
             required
@@ -26,8 +26,8 @@
             >Password</label
           >
           <input
-            v-model="password"
             id="password"
+            v-model="password"
             name="password"
             type="password"
             required

@@ -12,8 +12,8 @@
             >Name</label
           >
           <input
-            v-model="name"
             id="name"
+            v-model="name"
             name="name"
             type="text"
             required
@@ -27,8 +27,8 @@
             >Email</label
           >
           <input
-            v-model="email"
             id="email"
+            v-model="email"
             name="email"
             type="email"
             required
@@ -42,14 +42,34 @@
             >Password</label
           >
           <input
-            v-model="password"
             id="password"
+            v-model="password"
             name="password"
             type="password"
             required
             class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
             placeholder="Password"
           />
+        </div>
+
+        <div>
+          <label
+            for="password_confirmation"
+            class="block text-sm font-medium text-gray-700"
+            >Confirm Password</label
+          >
+          <input
+            id="password_confirmation"
+            v-model="password_confirmation"
+            name="password_confirmation"
+            type="password"
+            required
+            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            placeholder="Confirm Password"
+          />
+          <p v-if="passwordError" class="text-red-500 text-sm mt-1">
+            {{ passwordError }}
+          </p>
         </div>
 
         <div>
@@ -86,10 +106,17 @@ export default {
       email: "",
       password: "",
       role: "student",
+      password_confirmation: "",
+      passwordError: "", // Add this line to define the passwordError property
     };
   },
   methods: {
     async register() {
+      this.passwordError = ""; // Reset the error message before checking
+      if (this.password !== this.password_confirmation) {
+        this.passwordError = "Passwords do not match.";
+        return;
+      }
       try {
         await axios.post("/register", {
           name: this.name,

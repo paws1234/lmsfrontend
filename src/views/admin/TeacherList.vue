@@ -54,8 +54,8 @@
               Update
             </router-link>
             <button
-              @click="confirmDelete(teacher.id)"
               class="ml-4 bg-red-600 text-white px-3 py-1 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+              @click="confirmDelete(teacher.id)"
             >
               Delete
             </button>
@@ -65,7 +65,7 @@
     </div>
 
     <ConfirmationModal
-      :isVisible="isModalVisible"
+      :is-visible="isModalVisible"
       title="Confirm Deletion"
       message="Are you sure you want to delete this teacher?"
       @confirm="deleteTeacher"
