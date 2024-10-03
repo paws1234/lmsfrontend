@@ -99,7 +99,6 @@ export default {
     return {
       darkMode: false, // Initialize the dark mode state
       currentYear: new Date().getFullYear(),
-      darkMode: false,
     };
   },
   mounted() {
