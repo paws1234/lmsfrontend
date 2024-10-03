@@ -97,6 +97,7 @@ export default {
   name: "HomeComponent",
   data() {
     return {
+      darkMode: false, // Initialize the dark mode state
       currentYear: new Date().getFullYear(),
       darkMode: false,
     };

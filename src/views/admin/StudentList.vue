@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-100 p-6">
+  <div class="min-h-screen bg-blue-50 p-6">
     <header class="mb-6">
       <h1 class="text-3xl font-bold text-gray-900 mb-4 text-center">
         Student List
@@ -27,7 +27,7 @@
         Create New Student
       </router-link>
     </header>
-    <div class="bg-white p-6 rounded-lg shadow-md">
+    <div class="bg-blue-100 p-6 rounded-lg shadow-md">
       <ul class="space-y-4">
         <li
           v-for="student in students"
@@ -35,10 +35,10 @@
           class="flex justify-between items-center p-4 border-b border-gray-200"
         >
           <div class="flex-1">
-            <h2 class="text-lg font-semibold text-gray-800">
+            <h2 class="text-lg font-semibold text-blue-900">
               Name: {{ student.name }}
             </h2>
-            <p class="text-gray-600">Email: {{ student.email }}</p>
+            <p class="text-blue-900">Email: {{ student.email }}</p>
           </div>
           <div class="ml-4 flex-shrink-0 space-x-4">
             <router-link

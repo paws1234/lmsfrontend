@@ -1,6 +1,11 @@
 <template>
-  <div class="min-h-screen bg-gray-100 flex flex-col p-6">
-    <h2 class="text-3xl font-bold mb-6 text-center text-gray-900">
+<div class=" bg-blue-50">
+  <div class="min-h-screen flex flex-col p-6">
+
+<div class="absolute top-8 sm:left-24 sm:top-5 md:left-40 md:top-3 lg:left-80 lg:top-8">
+  <img class=" hidden sm:block h-16" src="@/assets/img/clogo.jpg" alt="University Logo" />
+</div>
+    <h2 class="text-3xl font-bold mb-6 text-center text-blue-900">
       Admin Dashboard
     </h2>
 
@@ -106,10 +111,10 @@
               :key="eventHandler.id"
               class="p-4 border-b border-gray-200"
             >
-              <h4 class="text-lg font-semibold text-gray-800">
+              <h4 class="text-lg font-semibold text-blue-800">
                 {{ eventHandler.name }}
               </h4>
-              <p class="text-gray-600">
+              <p class="text-blue-900">
                 Description: {{ eventHandler.description }}<br />
                 Date: {{ eventHandler.date }}
               </p>
@@ -121,6 +126,7 @@
         </p>
       </div>
     </div>
+  </div>
   </div>
 </template>
 

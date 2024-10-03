@@ -1,6 +1,6 @@
 <template>
-  <div class="min-h-screen bg-gray-100 p-6 flex items-center justify-center">
-    <div class="max-w-lg w-full bg-white p-8 rounded-lg shadow-md">
+  <div class="min-h-screen bg-blue-50 p-6 flex items-center justify-center">
+    <div class="max-w-lg w-full bg-blue-100 p-8 rounded-lg shadow-md">
       <h1 class="text-2xl font-bold text-gray-900 mb-6 text-center">
         {{ isEditing ? "Edit Teacher" : "Create Teacher" }}
       </h1>
@@ -9,7 +9,7 @@
         <div>
           <label
             for="name"
-            class="block text-sm font-medium text-gray-700 mb-1"
+            class="block text-md font-bold text-blue-900 mb-1"
           >
             Name
           </label>
@@ -27,7 +27,7 @@
         <div>
           <label
             for="email"
-            class="block text-sm font-medium text-gray-700 mb-1"
+            class="block text-md font-bold text-blue-900 mb-1"
           >
             Email
           </label>
@@ -45,7 +45,7 @@
         <div>
           <label
             for="password"
-            class="block text-sm font-medium text-gray-700 mb-1"
+            class="block text-md font-bold text-blue-900 mb-1"
           >
             Password
           </label>
@@ -63,7 +63,7 @@
         <div>
           <label
             for="confirm-password"
-            class="block text-sm font-medium text-gray-700 mb-1"
+            class="block text-md font-bold text-blue-900 mb-1"
           >
             Confirm Password
           </label>

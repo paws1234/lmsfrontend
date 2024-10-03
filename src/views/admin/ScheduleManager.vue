@@ -1,6 +1,6 @@
 <template>
-  <div class="min-h-screen bg-gray-100 p-6">
-    <h1 class="text-3xl font-bold text-gray-900 mb-6 text-center">
+  <div class="min-h-screen bg-blue-50 p-6">
+    <h1 class="text-3xl font-bold text-blue-900 mb-6 text-center">
       Computer Lab Schedule
     </h1>
     <div
@@ -22,33 +22,33 @@
     </button>
     <form
       v-if="showForm"
-      class="bg-white p-8 rounded-lg shadow-md mb-6"
+      class="bg-blue-100 p-8 rounded-lg shadow-md mb-6"
       @submit.prevent="saveSchedule"
     >
-      <h2 class="text-xl font-semibold mb-4 text-gray-800">
+      <h2 class="text-2xl font-bold mb-4 text-blue-900">
         {{ isEditing ? "Edit Schedule" : "Add New Schedule" }}
       </h2>
       <div class="mb-6">
-        <label for="day" class="block text-gray-700 text-lg font-medium"
+        <label for="day" class="block text-blue-900 text-lg font-semibold"
           >Day</label
         >
         <select
           id="day"
           v-model="form.day"
-          class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+          class="mt-1 block w-full border-blue-900 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-100"
           required
         >
-          <option value="" disabled>Select a day</option>
-          <option>Monday</option>
-          <option>Tuesday</option>
-          <option>Wednesday</option>
-          <option>Thursday</option>
-          <option>Friday</option>
-          <option>Saturday</option>
+          <option value="" class="text-blue-900 font-semibold" disabled>Select a day</option>
+          <option class="text-blue-900 font-semibold">Monday</option>
+          <option class="text-blue-900 font-semibold">Tuesday</option>
+          <option class="text-blue-900 font-semibold">Wednesday</option>
+          <option class="text-blue-900 font-semibold">Thursday</option>
+          <option class="text-blue-900 font-semibold">Friday</option>
+          <option class="text-blue-900 font-semibold">Saturday</option>
         </select>
       </div>
       <div class="mb-6">
-        <label for="time_in" class="block text-gray-700 text-lg font-medium"
+        <label for="time_in" class="block text-blue-900 text-lg font-semibold"
           >Time In</label
         >
         <input
@@ -60,7 +60,7 @@
         />
       </div>
       <div class="mb-6">
-        <label for="time_out" class="block text-gray-700 text-lg font-medium"
+        <label for="time_out" class="block text-blue-900 text-lg font-semibold"
           >Time Out</label
         >
         <input
@@ -72,7 +72,7 @@
         />
       </div>
       <div class="mb-6">
-        <label for="room_name" class="block text-gray-700 text-lg font-medium"
+        <label for="room_name" class="block text-blue-900 text-lg font-semibold"
           >Room</label
         >
         <input
@@ -84,7 +84,7 @@
         />
       </div>
       <div class="mb-6">
-        <label for="teacher" class="block text-gray-700 text-lg font-medium"
+        <label for="teacher" class="block text-blue-900 text-lg font-semibold"
           >Teacher</label
         >
         <select
@@ -93,7 +93,7 @@
           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
           required
         >
-          <option value="" disabled>Select a teacher</option>
+          <option value=""  disabled>Select a teacher</option>
           <option
             v-for="teacher in teachers"
             :key="teacher.id"
@@ -110,7 +110,7 @@
         {{ isEditing ? "Update Schedule" : "Add Schedule" }}
       </button>
     </form>
-    <div v-if="schedules.length" class="bg-white p-6 rounded-lg shadow-md">
+    <div v-if="schedules.length" class="bg-blue-100 p-6 rounded-lg shadow-md">
       <ul class="space-y-4">
         <li
           v-for="schedule in schedules"
@@ -118,14 +118,14 @@
           class="p-4 border-b border-gray-200 flex items-start justify-between"
         >
           <div class="flex-1">
-            <h2 class="text-lg font-semibold text-gray-800">
+            <h2 class="text-lg font-semibold text-blue-900">
               {{ schedule.day }}
             </h2>
-            <p class="text-gray-600">
+            <p class="text-blue-900">
               Time: {{ schedule.time_in }} - {{ schedule.time_out }}
             </p>
-            <p class="text-gray-600 mt-2">Room: {{ schedule.room }}<br /></p>
-            <p class="text-gray-600 mt-2">
+            <p class="text-blue-900 mt-2">Room: {{ schedule.room }}<br /></p>
+            <p class="text-blue-900 mt-2">
               Teacher: {{ schedule.teacher.name }}
             </p>
           </div>

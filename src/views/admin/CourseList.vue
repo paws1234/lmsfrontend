@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-100 p-6">
+  <div class="min-h-screen bg-blue-50 p-6">
     <header class="mb-6">
       <h1 class="text-3xl font-bold text-gray-900 mb-4 text-center">Courses</h1>
       <router-link
@@ -15,7 +15,7 @@
       class="flex flex-col items-center justify-center space-y-4 mb-6"
     >
       <div class="loader"></div>
-      <p class="text-blue-600 text-lg font-medium">Loading courses...</p>
+      <p class="text-blue-900 text-lg font-medium">Loading courses...</p>
     </div>
 
     <p v-if="error" class="text-red-600 text-lg font-medium text-center mb-6">
@@ -24,12 +24,12 @@
 
     <p
       v-if="!loading && !error && !courses.length"
-      class="text-gray-600 text-lg font-medium text-center mb-6"
+      class="text-blue-900 text-lg font-medium text-center mb-6"
     >
       No courses found.
     </p>
 
-    <div v-if="courses.length" class="bg-white p-6 rounded-lg shadow-md">
+    <div v-if="courses.length" class="bg-blue-100 p-6 rounded-lg shadow-md">
       <ul class="space-y-4">
         <li
           v-for="course in courses"
@@ -37,10 +37,10 @@
           class="p-4 border-b border-gray-200 flex items-start justify-between"
         >
           <div class="flex-1">
-            <h2 class="text-lg font-semibold text-gray-800">
+            <h2 class="text-lg font-semibold text-blue-900">
               {{ course.title }}
             </h2>
-            <p class="text-gray-600">{{ course.description }}</p>
+            <p class="text-blue-900">{{ course.description }}</p>
           </div>
           <div class="ml-4 flex-shrink-0 space-x-4">
             <router-link

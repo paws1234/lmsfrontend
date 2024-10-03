@@ -1,6 +1,6 @@
 <template>
-  <div class="min-h-screen bg-gray-100 p-6">
-    <h1 class="text-3xl font-bold text-gray-900 mb-6 text-center">
+  <div class="min-h-screen bg-blue-50 p-6">
+    <h1 class="text-3xl font-bold text-blue-900 mb-6 text-center">
       School Events
     </h1>
     <div
@@ -24,14 +24,14 @@
 
     <form
       v-if="showForm"
-      class="bg-white p-8 rounded-lg shadow-md mb-6"
+      class="bg-blue-100 p-8 rounded-lg shadow-md mb-6"
       @submit.prevent="saveEventHandler"
     >
-      <h2 class="text-xl font-semibold mb-4 text-gray-800">
+      <h2 class="text-xl font-bold mb-4 text-blue-900">
         {{ isEditing ? "Edit Event Handler" : "Add New Event Handler" }}
       </h2>
       <div class="mb-6">
-        <label for="name" class="block text-gray-700 text-lg font-medium">
+        <label for="name" class="block text-blue-900 text-lg font-medium">
           Name
         </label>
         <input
@@ -45,7 +45,7 @@
       <div class="mb-6">
         <label
           for="description"
-          class="block text-gray-700 text-lg font-medium"
+          class="block text-blue-900 text-lg font-medium"
         >
           Description
         </label>
@@ -58,7 +58,7 @@
         ></textarea>
       </div>
       <div class="mb-6">
-        <label for="event_date" class="block text-gray-700 text-lg font-medium">
+        <label for="event_date" class="block text-blue-900 text-lg font-medium">
           Event Date
         </label>
         <input
@@ -77,7 +77,7 @@
       </button>
     </form>
 
-    <div v-if="eventHandlers.length" class="bg-white p-6 rounded-lg shadow-md">
+    <div v-if="eventHandlers.length" class="bg-blue-100 p-6 rounded-lg shadow-md">
       <ul class="space-y-4">
         <li
           v-for="eventHandler in eventHandlers"
@@ -85,12 +85,12 @@
           class="p-4 border-b border-gray-200 flex items-start justify-between"
         >
           <div class="flex-1">
-            <h2 class="text-lg font-semibold text-gray-800">
+            <h2 class="text-lg font-semibold text-blue-900">
               {{ eventHandler.name }}
             </h2>
-            <p class="text-gray-600">
+            <p class="text-blue-900">
               Description: {{ eventHandler.description }}<br />
-              <span class="text-gray-500">Date: {{ eventHandler.date }}</span>
+              <span class="text-blue-900">Date: {{ eventHandler.date }}</span>
             </p>
           </div>
           <div class="ml-4 flex-shrink-0 space-x-4">
