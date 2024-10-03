@@ -15,7 +15,7 @@
             v-model="name"
             name="name"
             type="text"
-            placeholder="Enter teacher name"
+            placeholder="Enter student name"
             required
             class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
           />
@@ -32,7 +32,7 @@
             v-model="email"
             name="email"
             type="email"
-            placeholder="Enter teacher email"
+            placeholder="Enter student email"
             required
             class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
           />
