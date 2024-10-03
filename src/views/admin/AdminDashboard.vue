@@ -1,6 +1,11 @@
 <template>
-  <div class="min-h-screen bg-gray-100 flex flex-col p-6">
-    <h2 class="text-3xl font-bold mb-6 text-center text-gray-900">
+<div class=" bg-blue-50">
+  <div class="min-h-screen flex flex-col p-6">
+
+<div class="absolute top-8 sm:left-24 sm:top-5 md:left-40 md:top-3 lg:left-80 lg:top-8">
+  <img class=" hidden sm:block h-16" src="@/assets/img/clogo.jpg" alt="University Logo" />
+</div>
+    <h2 class="text-3xl font-bold mb-6 text-center text-blue-900">
       Admin Dashboard
     </h2>
 
@@ -11,35 +16,65 @@
       </div>
     </div>
 
+
     <div v-else class="flex flex-col gap-6">
       <div class="flex flex-wrap gap-6 mt-6">
         <div class="w-full sm:w-1/2 lg:w-1/4">
-          <div class="bg-white p-6 rounded-lg shadow-lg">
-            <h3 class="text-xl font-semibold mb-2 text-gray-800">
+          <div class="bg-blue-100 p-6 rounded-lg shadow-lg ">
+             
+            <h3 class="text-xl font-semibold mb-2 text-blue-900">
               Number of Students
             </h3>
-            <p class="text-2xl font-bold text-gray-900">{{ studentCount }}</p>
+
+            <div class="flex">
+            <img
+      class=""
+      src="@/assets/img/icons8-student-24.png"
+      alt="student">
+            <p class="text-2xl font-bold text-blue-900 pl-3">{{ studentCount }}</p>
+            </div>
           </div>
         </div>
+
+
         <div class="w-full sm:w-1/2 lg:w-1/4">
-          <div class="bg-white p-6 rounded-lg shadow-lg">
-            <h3 class="text-xl font-semibold mb-2 text-gray-800">
+          <div class="bg-blue-100 p-6 rounded-lg shadow-lg">
+            <h3 class="text-xl font-semibold mb-2 text-blue-900">
               Number of Teachers
             </h3>
-            <p class="text-2xl font-bold text-gray-900">{{ teacherCount }}</p>
+
+ <div class="flex">
+             <img
+      class=""
+      src="@/assets/img/icons8-teacher-24.png"
+      alt="teacher">
+            <p class="text-2xl font-bold text-blue-900 pl-3">{{ teacherCount }}</p>
           </div>
         </div>
+        </div>
+
+
+
+  
         <div class="w-full sm:w-1/2 lg:w-1/4">
-          <div class="bg-white p-6 rounded-lg shadow-lg">
-            <h3 class="text-xl font-semibold mb-2 text-gray-800">
+          <div class="bg-blue-100 p-6 rounded-lg shadow-lg">
+            <h3 class="text-xl font-semibold mb-2 text-blue-900 pl-3">
               Number of Courses
             </h3>
-            <p class="text-2xl font-bold text-gray-900">{{ courseCount }}</p>
+
+            <div class="flex">
+            <img
+      class=""
+      src="@/assets/img/icons8-books-30.png"
+      alt="courses">
+            <p class="text-2xl font-bold text-blue-900 pl-3">{{ courseCount }}</p>
           </div>
         </div>
       </div>
-      <div class="bg-white p-6 rounded-lg shadow-lg mt-6">
-        <h3 class="text-xl font-semibold mb-4 text-gray-800 text-center">
+</div>
+
+      <div class="bg-blue-100 p-6 rounded-lg shadow-lg mt-6">
+        <h3 class="text-xl font-semibold mb-4 text-blue-900 text-center">
           School Events
         </h3>
         <div v-if="eventHandlers.length">
@@ -49,10 +84,10 @@
               :key="eventHandler.id"
               class="p-4 border-b border-gray-200"
             >
-              <h4 class="text-lg font-semibold text-gray-800">
+              <h4 class="text-lg font-semibold text-blue-800">
                 {{ eventHandler.name }}
               </h4>
-              <p class="text-gray-600">
+              <p class="text-blue-900">
                 Description: {{ eventHandler.description }}<br />
                 Date: {{ eventHandler.date }}
               </p>
@@ -64,6 +99,7 @@
         </p>
       </div>
     </div>
+  </div>
   </div>
 </template>
 

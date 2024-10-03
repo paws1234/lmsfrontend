@@ -29,29 +29,30 @@
       <div class="p-4">
         <router-link
           to="/admin/dashboard"
-          class="text-2xl font-semibold mb-6 block text-center text-white hover:text-gray-300"
+          class="text-2xl font-semibold mb-6 block text-center text-white hover:text-blue-900 flex "
         >
+         <img class=" hidden sm:block h-8 pr-3 mt-0" src="@/assets/img/clogo.jpg" alt="University Logo" />
           Admin
         </router-link>
         <ul class="space-y-4">
           <li>
             <router-link
               to="/admin/students"
-              class="block px-4 py-2 rounded-md text-gray-300 hover:text-white hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-shadow duration-300 ease-in-out hover:shadow-lg hover:shadow-blue-500/70"
+              class="block px-4 py-2 rounded-md text-gray-300 hover:text-blue-500 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-shadow duration-300 ease-in-out hover:shadow-lg hover:shadow-blue-500/70 "
               >Students</router-link
             >
           </li>
           <li>
             <router-link
               to="/admin/teachers"
-              class="block px-4 py-2 rounded-md text-gray-300 hover:text-white hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-shadow duration-300 ease-in-out hover:shadow-lg hover:shadow-blue-500/70"
+              class="block px-4 py-2 rounded-md text-gray-300 hover:text-blue-500 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-shadow duration-300 ease-in-out hover:shadow-lg hover:shadow-blue-500/70"
               >Teachers</router-link
             >
           </li>
           <li>
             <router-link
               to="/admin/courses"
-              class="block px-4 py-2 rounded-md text-gray-300 hover:text-white hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-shadow duration-300 ease-in-out hover:shadow-lg hover:shadow-blue-500/70"
+              class="block px-4 py-2 rounded-md text-gray-300 hover:text-blue-500 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-shadow duration-300 ease-in-out hover:shadow-lg hover:shadow-blue-500/70"
             >
               Courses
             </router-link>
@@ -60,7 +61,7 @@
           <li>
             <router-link
               to="/admin/schedules"
-              class="block px-4 py-2 rounded-md text-gray-300 hover:text-white hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-shadow duration-300 ease-in-out hover:shadow-lg hover:shadow-blue-500/70"
+              class="block px-4 py-2 rounded-md text-gray-300 hover:text-blue-500 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-shadow duration-300 ease-in-out hover:shadow-lg hover:shadow-blue-500/70"
               >ComputerLab</router-link
             >
           </li>
@@ -68,15 +69,17 @@
           <li>
             <router-link
               to="/admin/event-handlers"
-              class="block px-4 py-2 rounded-md text-gray-300 hover:text-white hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-shadow duration-300 ease-in-out hover:shadow-lg hover:shadow-blue-500/70"
+              class="block px-4 py-2 rounded-md text-gray-300 hover:text-blue-500 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-shadow duration-300 ease-in-out hover:shadow-lg hover:shadow-blue-500/70"
               >Events</router-link
             >
           </li>
           <button
-            class="mt-auto w-full py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+            class="mt-auto w-32 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 flex justify-center items-center relative top-52"
             @click="logout"
           >
-            Logout
+            <svg class="w-5 " xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
+  <path strokeLinecap="round" strokeLinejoin="round" d="M5.636 5.636a9 9 0 1 0 12.728 0M12 3v9" />
+</svg>
           </button>
         </ul>
       </div>
@@ -135,7 +138,7 @@ export default {
   top: 0;
   left: 0;
   height: 100%;
-  background-color: #374151;
+  background-color: #172554;
   padding: 1rem;
   z-index: 40;
 }

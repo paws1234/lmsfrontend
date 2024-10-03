@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-100 p-6 flex flex-col items-center">
+  <div class="min-h-screen bg-blue-50 p-6 flex flex-col items-center">
     <h1 class="text-3xl font-bold text-gray-900 mb-6 text-center">
       Update Teacher
     </h1>

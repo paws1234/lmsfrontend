@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-100 p-6 flex flex-col items-center">
+  <div class="min-h-screen bg-blue-50 p-6 flex flex-col items-center">
     <div class="max-w-4xl w-full bg-white shadow-md rounded-lg p-6">
       <h1 class="text-3xl font-bold mb-6 text-gray-900 text-center">
         Edit Course
@@ -7,7 +7,7 @@
       <form class="space-y-6" @submit.prevent="updateCourse">
         <div class="mb-4">
           <label
-            class="block text-gray-700 text-sm font-medium mb-2"
+            class="block text-blue-900 text-sm font-medium mb-2"
             for="title"
             >Title</label
           >
@@ -23,7 +23,7 @@
         </div>
         <div class="mb-4">
           <label
-            class="block text-gray-700 text-sm font-medium mb-2"
+            class="block text-blue-900 text-sm font-medium mb-2"
             for="description"
             >Description</label
           >

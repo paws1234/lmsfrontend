@@ -1,14 +1,25 @@
 <template>
   <div
-    class="min-h-screen bg-gray-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8"
+    class="min-h-screen bg-gray-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-blue-50 "
   >
     <div class="max-w-md w-full bg-white p-8 rounded-lg shadow-md">
       <h2 class="text-2xl font-extrabold text-gray-900 mb-6 text-center">
+
+<div class="absolute lg:top-10 lg:left-1/3 md:top-0 md:left-28  sm:top-1 sm:left-12 pt-3">
+  <div class="pt-3">
+    <img class="h-32 md:h-28 sm:h-25" src="@/assets/img/clogo.jpg" alt="University Logo" />
+  </div>
+</div>
+
+
+<div class="text-blue-900">
         Create Your Account
+</div>
+
       </h2>
       <form class="space-y-6" @submit.prevent="register">
         <div>
-          <label for="name" class="block text-sm font-medium text-gray-700"
+          <label for="name" class="block text-sm font-medium text-blue-900"
             >Name</label
           >
           <input
@@ -23,7 +34,7 @@
         </div>
 
         <div>
-          <label for="email" class="block text-sm font-medium text-gray-700"
+          <label for="email" class="block text-sm font-medium text-blue-900"
             >Email</label
           >
           <input
@@ -38,7 +49,7 @@
         </div>
 
         <div>
-          <label for="password" class="block text-sm font-medium text-gray-700"
+          <label for="password" class="block text-sm font-medium text-blue-900"
             >Password</label
           >
           <input
@@ -55,7 +66,7 @@
         <div>
           <label
             for="password_confirmation"
-            class="block text-sm font-medium text-gray-700"
+            class="block text-sm font-medium text-blue-900"
             >Confirm Password</label
           >
           <input
@@ -75,7 +86,7 @@
         <div>
           <button
             type="submit"
-            class="w-full py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            class="w-full py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-900 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
             Register
           </button>
