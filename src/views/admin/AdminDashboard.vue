@@ -11,33 +11,90 @@
       </div>
     </div>
 
-    <div v-else class="flex flex-col gap-6">
-      <div class="flex flex-wrap gap-6 mt-6">
+    <div v-else class="flex flex-col gap-6 ">
+      <div class="flex flex-wrap gap-6 mt-6 justify-center ">
         <div class="w-full sm:w-1/2 lg:w-1/4">
-          <div class="bg-white p-6 rounded-lg shadow-lg">
-            <h3 class="text-xl font-semibold mb-2 text-gray-800">
-              Number of Students
-            </h3>
-            <p class="text-2xl font-bold text-gray-900">{{ studentCount }}</p>
+          <div class="bg-white p-6 rounded-lg shadow-lg flex items-center space-x-4">
+            <div class="flex-shrink-0">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="w-6 h-6 mr-2"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M5.121 19.121A1.5 1.5 0 015.5 17H18.5a1.5 1.5 0 01.379 2.121M15 7A3 3 0 1111 7m4 0a4 4 0 00-8 0m4 8a5.5 5.5 0 00-6 0"
+                />
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-xl font-semibold mb-2 text-gray-800">
+                Number of Students
+              </h3>
+              <p class="text-2xl font-bold text-gray-900">{{ studentCount }}</p>
+            </div>
           </div>
         </div>
+
         <div class="w-full sm:w-1/2 lg:w-1/4">
-          <div class="bg-white p-6 rounded-lg shadow-lg">
-            <h3 class="text-xl font-semibold mb-2 text-gray-800">
-              Number of Teachers
-            </h3>
-            <p class="text-2xl font-bold text-gray-900">{{ teacherCount }}</p>
+          <div class="bg-white p-6 rounded-lg shadow-lg flex items-center space-x-4">
+            <div class="flex-shrink-0">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="w-6 h-6 mr-2"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 11a4 4 0 110-8 4 4 0 010 8zm-2 1v2a4 4 0 018 0v2M5.5 20.5h13"
+                />
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-xl font-semibold mb-2 text-gray-800">
+                Number of Teachers
+              </h3>
+              <p class="text-2xl font-bold text-gray-900">{{ teacherCount }}</p>
+            </div>
           </div>
         </div>
+
         <div class="w-full sm:w-1/2 lg:w-1/4">
-          <div class="bg-white p-6 rounded-lg shadow-lg">
-            <h3 class="text-xl font-semibold mb-2 text-gray-800">
-              Number of Courses
-            </h3>
-            <p class="text-2xl font-bold text-gray-900">{{ courseCount }}</p>
+          <div class="bg-white p-6 rounded-lg shadow-lg flex items-center space-x-4">
+            <div class="flex-shrink-0">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="w-12 h-12 text-yellow-500"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M3 6h18M3 12h18M3 18h18"
+                />
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-xl font-semibold mb-2 text-gray-800">
+                Number of Courses
+              </h3>
+              <p class="text-2xl font-bold text-gray-900">{{ courseCount }}</p>
+            </div>
           </div>
         </div>
       </div>
+
       <div class="bg-white p-6 rounded-lg shadow-lg mt-6">
         <h3 class="text-xl font-semibold mb-4 text-gray-800 text-center">
           School Events
