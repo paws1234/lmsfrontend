@@ -38,6 +38,7 @@
           <tr class="bg-gray-200 text-gray-700">
             <th class="p-4 text-left">Title</th>
             <th class="p-4 text-left">Description</th>
+            <th class="p-4 text-left">Schedule</th> <!-- Added Schedule Column -->
             <th class="p-4 text-center">Actions</th>
           </tr>
         </thead>
@@ -45,6 +46,7 @@
           <tr v-for="subject in filteredSubjects" :key="subject.id">
             <td class="p-4">{{ subject.title }}</td>
             <td class="p-4">{{ subject.description }}</td>
+            <td class="p-4">{{ subject.schedule }}</td> <!-- Display the Schedule -->
             <td class="p-4 text-center">
               <router-link
                 :to="{ name: 'SubjectEdit', params: { id: subject.id } }"
@@ -104,7 +106,8 @@ export default {
       return subjects.value.filter(
         (subject) =>
           subject.title.toLowerCase().includes(query) ||
-          subject.description.toLowerCase().includes(query),
+          subject.description.toLowerCase().includes(query) ||
+          (subject.schedule && subject.schedule.toLowerCase().includes(query)) // Filter by schedule as well
       );
     });
 

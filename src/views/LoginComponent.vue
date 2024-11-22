@@ -99,17 +99,27 @@ export default {
       this.loading = true;
       this.errorMessage = "";
       try {
+        // Send login request to the server
         const response = await axios.post("/login", {
           email: this.email,
           password: this.password,
         });
 
-        localStorage.setItem("token", response.data.token);
+        // Manually encode the token using Base64 (Basic "encryption")
+        const encodedToken = btoa(response.data.token);  // Base64 encode the token
+
+        // Store the encoded token in localStorage
+        localStorage.setItem("token", encodedToken);
+
+        // Set token in Axios default Authorization header for future requests
+        //axios.defaults.headers.common["Authorization"] = `Bearer ${response.data.token}`;
+
+        // Navigate to the user's dashboard based on their role
         this.$router.push(`/${response.data.role}/dashboard`);
       } catch (error) {
         console.error(
           "Login error:",
-          error.response?.data?.message || error.message,
+          error.response?.data?.message || error.message
         );
         this.errorMessage =
           error.response?.data?.message ||
@@ -120,6 +130,8 @@ export default {
   },
 };
 </script>
+
+
 
 <style scoped>
 /* Existing styles here */

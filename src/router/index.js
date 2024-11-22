@@ -27,6 +27,10 @@ import TodoCreate from "../views/teacher/TodoCreate.vue";
 import TodoEdit from "../views/teacher/TodoEdit.vue";
 import QuestionForm from '../views/teacher/QuestionForm.vue';
 import QuestionList from '../views/teacher/QuestionList.vue';
+import StudentLayout from "../views/student/StudentLayout.vue";
+import StudentTasks from '../views/student/StudentTasks.vue'; // Import Tasks component
+import StudentScores from '../views/student/StudentScores.vue'; // Import Scores component
+import StudentLists from '../views/student/StudentList.vue'; // Import Scores component
 
 const routes = [
   { path: "/", name: "Home", component: Home },
@@ -137,10 +141,33 @@ const routes = [
   },
 
   {
-    path: "/student/dashboard",
-    name: "StudentDashboard",
-    component: StudentDashboard,
+    path: '/student',
+    component: StudentLayout,
+    children: [
+      {
+        path: 'dashboard',
+        name: 'StudentDashboard',
+        component: StudentDashboard,
+      },
+      {
+        path: 'tasks',  // Path for the Tasks view
+        name: 'StudentTasks',
+        component: StudentTasks,  // Import and assign Tasks component
+      },
+      {
+        path: 'scores', // Path for the Scores view
+        name: 'StudentScores',
+        component: StudentScores, // Import and assign Scores component
+      },
+      {
+        path: 'studentlists', // Path for the Scores view
+        name: 'StudentListS',
+        component: StudentLists, // Import and assign Scores component
+      },
+    ],
   },
+  
+ 
 ];
 
 const router = createRouter({

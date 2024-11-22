@@ -22,6 +22,17 @@
           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
         ></textarea>
       </div>
+      <div class="mb-4">
+        <label for="schedule" class="block text-gray-700">Schedule</label>
+        <input
+          id="schedule"
+          v-model="form.schedule"
+          type="text"
+          placeholder="e.g., 8 AM - 10 AM"
+          class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+          required
+        />
+      </div>
       <button
         type="submit"
         class="bg-blue-500 text-white px-4 py-2 rounded-md mr-4"
@@ -49,11 +60,13 @@ export default {
     const form = ref({
       title: "",
       description: "",
+      schedule: "",  // New field for schedule
     });
     const router = useRouter();
 
     const createSubject = async () => {
       try {
+        // Send the subject data including the schedule to the backend
         await axios.post("/teacher/subjects", form.value);
         router.push("/teacher/subjects");
       } catch (error) {
