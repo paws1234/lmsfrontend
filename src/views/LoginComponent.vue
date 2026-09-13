@@ -3,22 +3,31 @@
     class="min-h-screen bg-gray-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-blue-50"
   >
     <div class="max-w-md w-full bg-white p-8 rounded-lg shadow-md">
-      <h2 class="text-2xl font-extrabold text-gray-900 mb-6 text-center">
-       
-       <div class="flex justify-center items-center absolute top-24 right-1/3 	md:top-5 md:right-32 sm:top-5 sm:right-12 lg:top-20 lg:right-1/3	">
-  <div class="pt-3">
-    <img class="h-32 " src="@/assets/img/clogo.jpg" alt="University Logo" />
-  </div>
-</div>
-
-
-<div class=" w-32 relative left-32 text-blue-900 ">
-<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-  <path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-</svg>
-        </div>
-
-      </h2>
+      <!--
+        The seal and the account glyph used to sit in an `absolute` wrapper that
+        had no positioned ancestor, so they were positioned against the viewport
+        rather than this card — at 390px the seal overlapped the card by ~53px,
+        and at wider widths it drifted away from it. Both are ordinary flow
+        content now, centred above the form.
+        `size-6` was also a no-op: Tailwind 2 has no `size-*` utility (that is
+        Tailwind 3.4+), so the glyph rendered at the SVG's default size. w-6/h-6
+        exist and are used instead.
+      -->
+      <div class="flex flex-col items-center mb-4">
+        <img
+          class="h-24 w-24 object-contain mb-3"
+          src="@/assets/img/clogo.jpg"
+          alt="Cebu Technological University seal"
+        />
+        <span
+          class="w-10 h-10 rounded-full bg-blue-50 text-blue-900 flex items-center justify-center"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+          </svg>
+        </span>
+      </div>
+      <h1 class="text-2xl font-extrabold text-gray-900 mb-6 text-center">Sign in</h1>
       <form class="space-y-6" @submit.prevent="login">
         <div>
           <label for="email" class="block text-sm font-medium text-blue-900"
@@ -29,6 +38,7 @@
             v-model="email"
             name="email"
             type="email"
+            autocomplete="email"
             required
             class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
             placeholder="Email Address"
@@ -43,6 +53,7 @@
             v-model="password"
             name="password"
             type="password"
+            autocomplete="current-password"
             required
             class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
             placeholder="Password"

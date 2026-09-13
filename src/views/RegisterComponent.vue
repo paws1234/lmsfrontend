@@ -3,20 +3,23 @@
     class="min-h-screen bg-gray-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-blue-50 "
   >
     <div class="max-w-md w-full bg-white p-8 rounded-lg shadow-md">
-      <h2 class="text-2xl font-extrabold text-gray-900 mb-6 text-center">
-
-<div class="absolute lg:top-10 lg:left-1/3 md:top-0 md:left-28  sm:top-1 sm:left-12 pt-3">
-  <div class="pt-3">
-    <img class="h-32 md:h-28 sm:h-25" src="@/assets/img/clogo.jpg" alt="University Logo" />
-  </div>
-</div>
-
-
-<div class="text-blue-900">
+      <!--
+        Same defect as LoginComponent: an `absolute` wrapper with no positioned
+        ancestor anywhere above it, so the seal was positioned against the
+        viewport rather than this card. `sm:h-25` is also not a Tailwind 2 class
+        (there is no h-25), so that breakpoint silently fell back to `md:h-28`.
+        The seal is ordinary flow content now, centred.
+      -->
+      <div class="flex flex-col items-center mb-4">
+        <img
+          class="h-24 w-24 object-contain"
+          src="@/assets/img/clogo.jpg"
+          alt="Cebu Technological University seal"
+        />
+      </div>
+      <h1 class="text-2xl font-extrabold text-gray-900 mb-6 text-center">
         Create Your Account
-</div>
-
-      </h2>
+      </h1>
       <form class="space-y-6" @submit.prevent="register">
         <div>
           <label for="name" class="block text-sm font-medium text-blue-900"
@@ -27,6 +30,7 @@
             v-model="name"
             name="name"
             type="text"
+            autocomplete="name"
             required
             class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
             placeholder="Your Name"
@@ -42,6 +46,7 @@
             v-model="email"
             name="email"
             type="email"
+            autocomplete="email"
             required
             class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
             placeholder="Email Address"
@@ -57,6 +62,7 @@
             v-model="password"
             name="password"
             type="password"
+            autocomplete="new-password"
             required
             class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
             placeholder="Password"

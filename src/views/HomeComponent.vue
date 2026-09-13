@@ -2,8 +2,6 @@
   <div :class="{ 'dark': darkMode }" class="min-h-screen flex flex-col">
     <!-- Header -->
     <header class="flex items-center justify-between lg:justify-start dark:bg-black py-4 px-3 sm:px-6 lg:px-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
       <!-- University Logo -->
       <div class="flex items-center space-x-4">
         <img class="h-12 sm:h-16" src="/ts2.png" alt="University Logo" />
