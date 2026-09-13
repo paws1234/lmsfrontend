@@ -3,7 +3,9 @@ import CryptoJS from "crypto-js";
 
 // Create an Axios instance
 const instance = axios.create({
-  baseURL: "http://localhost:8000/api", // Base API URL
+  // Base API URL; override with VUE_APP_API_BASE_URL (docker-compose sets it)
+  // when the API is not on the same host as the dev server.
+  baseURL: process.env.VUE_APP_API_BASE_URL || "http://localhost:8000/api",
 });
 
 // Add request interceptor to include the Authorization token in all requests
