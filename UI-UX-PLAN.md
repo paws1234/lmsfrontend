@@ -54,16 +54,22 @@ Status: **in progress** · Owner: frontend (`lmsfrontend`) · Last updated 2026-
   profile is not set up yet" panel on that 404 instead of zeros, and its dead `loadDashboardData()`
   no-op is gone. Lint improved by one warning (792 → 791); the build still passes. Measurements in
   `UI-UX-BASELINE.md` T4.1–T4.5.
+- **F6 closed from both sides (2026-09-13).** Two follow-ups landed after the bullet above: the scores
+  page now tells "no student profile" apart from "nothing published" (both arrive as 404, told apart
+  only by the body text), and `AuthController::register` creates the linked `students` row for student
+  accounts — so registration produces a usable account instead of a dead end. That second change is a
+  deliberate, owner-approved exception to §3: the response contract is unchanged, only a side effect.
+  Verified by registering a student and confirming both rows exist, that a teacher registration creates
+  no `students` row, and that a deliberately unlinked account still gets the explanatory panel.
 
 ### Still open
 - **F5** — *fixed (T4.1–T4.3, T4.6).* Error bodies are decrypted, and a rejected login, an unreachable
   server and a validation failure each now say something true — on both the login and register forms.
-- **F6** — *fixed for the student dashboard (T4.4/T4.5); fix side decided (T4.7).* A missing
-  `students` row renders a "your profile is not set up yet" panel instead of zeros. The scores page
-  still says "No scores yet" for the same condition — both are 404s, distinguishable only by the body
-  key, which is now readable — so it is worth revisiting rather than leaving as-is. Registration still
-  produces an account that cannot use the student area until an admin enrols it; that is a product
-  question, recorded in Phase 4.
+- **F6** — *fixed, from both sides.* A missing `students` row renders a "your profile is not set up
+  yet" panel instead of zeros, and the scores page distinguishes "no profile" from "nothing
+  published" rather than calling both "No scores yet". Registration additionally creates the linked
+  `students` row for student accounts, so a new account is usable without an admin step. See
+  `UI-UX-BASELINE.md`.
 - **F9** — the dead `dotenv` dependency and the unused `localStorageInterceptor.js`.
 - Phase 6 polish, and the accessibility half of Phase 2.
 
@@ -100,7 +106,7 @@ counts, route inventory). This file states intent; that one holds the measuremen
 | F3 | **Login/Register logo overlaps the form card on mobile.** The wrapper is `absolute top-24 right-1/3 md:top-5 md:right-32 …` with **no positioned ancestor**, so it lays out against the viewport instead of the card. | Verified: 53 px overlap at 390×844 (logo y 108–236, card top 183) |
 | F4 | **Scores page renders blank when there is no data.** `ScoreController::index()` returns `404 {"message":"No submissions found for this student"}`; the view shows only the "Your Scores" heading plus a console error. | Verified in the deployed app | Fixed |
 | F5 | **Login failures can't say why.** The 401 body is encrypted; the error path logs ciphertext and the UI falls back to "An error occurred. Please try again." | Verified in the deployed app | Fixed (T4.1–T4.3); register pending (T4.6) |
-| F6 | **A new account lands on a broken dashboard.** `POST /api/register` writes only `users`; the student dashboard needs a `students` row and 404s without one. | Verified end-to-end | Fixed for the dashboard (T4.4/T4.5); decision pending (T4.7) |
+| F6 | **A new account lands on a broken dashboard.** `POST /api/register` writes only `users`; the student dashboard needs a `students` row and 404s without one. | Verified end-to-end | Fixed (dashboard + scores panels; register now self-provisions) |
 | F7 | **Markup/a11y defects.** `<html lang="">` is empty; a duplicate `<meta name="viewport">` sits inside `HomeComponent`'s `<header>` (i.e. in the body); the dark-mode control is a `<div @click>` with no button semantics, no keyboard access and no `aria-pressed`; form inputs have no `autocomplete` hints. | Verified (files) |
 | F8 | **No local stylesheet exists.** `src/assets/` holds only `favicon.ico` and `img/`; `main.js` imports no global CSS, so every style is a utility class repeated per template. | Verified |
 | F9 | `localStorageInterceptor.js` is imported nowhere (`main.js` has it commented out); the axios interceptor attaches the token directly. Dead file. | Verified |
@@ -198,19 +204,26 @@ flagged rather than assumed.
 ### Phase 4 — Loading, empty and error states
 - **F4** — Scores renders an `.empty-state` card ("No scores yet — they appear once your teacher publishes results") on a 404 instead of a blank page.
 - **F5** — read/decrypt the error body so "Invalid credentials" reaches the user, and distinguish a network failure from rejected credentials.
-- **F6** — when the dashboard's profile lookup 404s, show a clear "your profile is not set up yet" panel rather than zeros.
-- **F6 — fix side decided 2026-09-13 (T4.7): the frontend, not the API.** `POST /api/register` writes a
-  `users` row and no `students` row, so a brand-new student account has no profile. Two ways out:
-  - *Frontend* (chosen) — render a "your profile is not set up yet" panel instead of zeros. Ships in
-    T4.4/T4.5, and touches no contract.
-  - *Backend* — have register create the `students` row as well. Rejected because it changes what a
-    registration means and how the API behaves, which §3 rules out ("no change to … the API
-    contract").
+- **F6** — when a profile lookup 404s, show a clear "your profile is not set up yet" panel rather than zeros.
+- **F6 — fixed from both sides, 2026-09-13.** `POST /api/register` wrote a `users` row and no
+  `students` row, so a brand-new student account had no profile and could not use the student area.
+  1. *Frontend (T4.4/T4.5, plus the follow-up below).* The dashboard renders a "your profile is not set
+     up yet" panel instead of zeros, and the scores page distinguishes "no profile" from "nothing
+     published" rather than calling both "No scores yet". Both stay in place: they still cover accounts
+     that lose their profile — a deleted `students` row, an admin-created user, a direct DB edit.
+  2. *Backend (owner-approved override of §3).* `AuthController::register` now creates the linked
+     `students` row when `role === 'student'`, inside a transaction, mirroring what the admin's
+     "add student" flow (`StudentController::store`) already did. This does **not** change the response
+     contract — same 201, same body — it removes an inconsistency between two paths that were meant to
+     produce the same thing.
 
-  **What this decision does not settle.** Registration still produces an account that cannot use the
-  student area until an administrator enrols it. The panel makes that legible; it does not make the
-  account usable. If self-provisioning is what the product actually wants, that is a backend change
-  and needs an explicit override of §3 — worth confirming rather than assuming.
+  Note the override explicitly: §3 says no change to the API contract. This keeps the contract and
+  changes a side effect, and it was asked for rather than assumed. An earlier revision of this section
+  recorded the backend option as *rejected*; that is superseded.
+
+  **Still true after the fix:** a newly registered student has a profile but no enrolments, so the
+  dashboard shows zeros until an admin enrols them in subjects. Self-provisioning removes the
+  "your profile is not set up yet" dead end; it does not give them anything to look at.
 - Skeletons/spinners while the API responds.
 - Verify: with an empty database every page explains itself; with data it renders it.
 

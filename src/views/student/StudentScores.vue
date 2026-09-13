@@ -7,6 +7,14 @@
       <p class="text-lg font-medium text-gray-600">Loading scores…</p>
     </div>
 
+    <div v-else-if="profileMissing" class="empty-state">
+      <p class="empty-state-title">Your profile is not set up yet</p>
+      <p>
+        Your account exists, but it is not linked to a student record, so there
+        are no scores to show. Ask your administrator to enrol you.
+      </p>
+    </div>
+
     <div v-else-if="isEmpty" class="empty-state">
       <p class="empty-state-title">No scores yet</p>
       <p>They appear once your teacher publishes results.</p>
@@ -87,6 +95,17 @@
 <script>
 import axios from "@/axios";
 
+/* ScoreController::index() answers 404 for two different situations and separates
+   them only by message text — both use the same `message` key:
+
+     "Student not found"                      -> no `students` row for this user
+     "No submissions found for this student"  -> profile exists, nothing published
+
+   Keep this in step with app/Http/Controllers/ScoreController.php. If that
+   wording changes this stops matching and the page falls back to "No scores
+   yet", i.e. the previous behaviour — it degrades quietly rather than wrongly. */
+const NO_STUDENT_PROFILE = "student not found";
+
 export default {
   name: "StudentScores",
   data() {
@@ -95,6 +114,7 @@ export default {
       scoresByFormMapId: {},
       loading: true,
       error: false,
+      profileMissing: false,
       isModalOpen: false,
       submissionDetails: [],
     };
@@ -107,6 +127,7 @@ export default {
       return (
         !this.loading &&
         !this.error &&
+        !this.profileMissing &&
         Object.keys(this.scoresByFormMapId).length === 0
       );
     },
@@ -118,17 +139,23 @@ export default {
     async fetchScores() {
       this.loading = true;
       this.error = false;
+      this.profileMissing = false;
       try {
         const response = await axios.get('/student/scores');
         this.scores = response.data.score_data;
         this.groupScoresByFormMapId();
       } catch (error) {
-        // The API answers 404 (with an encrypted, unreadable body) when the
-        // student has no submissions yet.  That is an empty result, not a
-        // failure, so it becomes the empty state instead of a console error.
+        // A 404 means "nothing to show" rather than a failure — but it has two
+        // causes, and the body is the only thing that distinguishes them.  The
+        // error body is decrypted by the axios interceptor, so `message` is
+        // readable here.
         if (error.response && error.response.status === 404) {
           this.scores = {};
           this.scoresByFormMapId = {};
+          const message = error.response.data && error.response.data.message;
+          this.profileMissing =
+            typeof message === "string" &&
+            message.toLowerCase().includes(NO_STUDENT_PROFILE);
         } else {
           this.error = true;
           console.error("Error fetching scores:", error);

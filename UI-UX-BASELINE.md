@@ -504,3 +504,75 @@ backend change and needs an explicit override of §3.
   lines and added **3** lint warnings (791 → 794). Restoring the multi-line attribute form the file
   already used brought it back to 791. If an editor is formatting on save in this workspace, it is not
   using the project's Prettier settings.
+
+---
+
+## Follow-ups — registration self-provisioning, and the scores page
+
+Two items raised at the end of T4.7 and fixed 2026-09-13.
+
+### 1. Registration now produces a usable account (backend)
+
+`StudentController::store` — the admin's "add student" flow — has always created **both** a `users` row
+and the linked `students` row. `AuthController::register` created only the user. The two ways of getting
+a student into the system disagreed, and registration was the odd one out: a self-registered student had
+no profile, and both `/student/stats` and `/student/scores` 404 on a missing row.
+
+The fix makes registration do what the admin flow already does:
+
+- the `students` row is created when `role === 'student'`, inside `DB::transaction` so a half-created
+  account — the exact broken state being fixed — cannot happen;
+- the user's existing password hash is reused rather than re-hashed (same password, and bcrypt is
+  deliberately expensive);
+- guarded on `$user->role`, not on the raw request value.
+
+Verified against the live database:
+
+| Check | Result |
+|-------|--------|
+| register a student | 201, and **`students` row id 3 linked to user 9** |
+| that account's dashboard | renders normally, `panel: false` — no "profile is not set up" state |
+| register a **teacher** | `students rows for that user = 0` — the role guard holds |
+
+The frontend panels are **kept**. They still cover accounts that lose their profile (a deleted
+`students` row, an admin-created user, a direct DB edit) and cost nothing when unused.
+
+**Not fixed by this, and worth knowing:** a newly registered student has a profile but no enrolments, so
+their dashboard shows zeros until an admin enrols them in subjects. Self-provisioning removes the dead
+end; it does not give them anything to look at.
+
+### 2. The scores page no longer confuses "no profile" with "nothing published" (frontend)
+
+`ScoreController::index()` returns 404 for both situations and separates them **only by message text** —
+both use the `message` key:
+
+| Body | Meaning |
+|------|---------|
+| `{"message":"Student not found"}` | no `students` row for this user |
+| `{"message":"No submissions found for this student"}` | profile exists, nothing published |
+
+The view therefore matches on the text, via a named constant with a comment pointing at the controller.
+That is a deliberate, documented coupling rather than a hidden one: if the wording changes the match
+stops and the page falls back to "No scores yet", which is the *previous* behaviour — it degrades
+quietly rather than showing something wrong.
+
+Verified in the browser:
+
+| Account | `/student/scores` shows |
+|---------|-------------------------|
+| registered (profile now exists) | **No scores yet** — *They appear once your teacher publishes results.* |
+| user with no `students` row | **Your profile is not set up yet** — *…not linked to a student record…* |
+
+A machine-readable discriminator (a code or a distinct key in the 404 body) would be sturdier than
+matching prose, but it would change the contract. Flagged, not done.
+
+### Regression state
+
+- Lint **791 warnings / 0 errors**. `StudentScores.vue` unchanged at 33; `StudentDashboard.vue`
+  **32 → 31**.
+- `npm run build` succeeds, 4 warnings, CSS 31 135 B raw / 6 903 B gzip.
+- All probe accounts removed from Supabase (4 users and their tokens across the session; `students`
+  rows go with them via `ON DELETE CASCADE`).
+- The Schedule card's `v-if`/`class` pair must stay **multi-line**. That is what Prettier wants;
+  collapsing it onto two lines adds 3 warnings, and moving the condition to a wrapping `<template>`
+  adds 1 (the extra indent pushes the long class past the print width).

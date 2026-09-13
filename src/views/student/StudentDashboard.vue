@@ -77,11 +77,13 @@
           </div>
         </div>
       </div>
-      <!-- Same rule as the scores view: show exactly one state.  Rendering an
+      <!-- Show exactly one state, same rule as the scores view.  Rendering an
            empty Schedule while the profile itself is missing would imply the
            app looked for schedules when it never got that far. -->
-      <div v-if="!loading && !profileMissing && !loadError"
-        class="bg-white p-6 rounded-lg shadow-lg w-full lg:w-1/4 h-auto mt-6 lg:mt-0 lg:ml-6">
+      <div
+        v-if="!loading && !profileMissing && !loadError"
+        class="bg-white p-6 rounded-lg shadow-lg w-full lg:w-1/4 h-auto mt-6 lg:mt-0 lg:ml-6"
+      >
         <h3 class="text-xl font-semibold mb-4 text-gray-800 text-center">Schedule</h3>
         <div v-if="schedules && schedules.length">
           <ul class="space-y-4">
