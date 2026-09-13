@@ -1,70 +1,117 @@
 <template>
-  <div class="p-6 bg-gray-100 min-h-screen">
-    <h2 class="text-2xl font-bold mb-4 text-gray-800">Enrollments</h2>
-    <div class="mb-4">
-      <input
-        v-model="searchQuery"
-        type="text"
-        placeholder="Search enrollments..."
-        class="p-2 border border-gray-300 rounded-md w-full max-w-md"
-      />
+  <div class="page">
+    <header class="page__head">
+      <p class="page__eyebrow">Teaching</p>
+      <h1 class="page__title">Enrollments</h1>
+      <p class="page__lead">
+        Which students are in which subject. A student only sees the tasks and
+        scores of the subjects they are enrolled in.
+      </p>
+    </header>
+
+    <div class="toolbar">
+      <div class="toolbar__group">
+        <label class="sr-only" for="enrollment-search"
+          >Search enrollments</label
+        >
+        <input
+          id="enrollment-search"
+          v-model="searchQuery"
+          class="form-field search"
+          type="search"
+          placeholder="Search by student or subject"
+        />
+      </div>
+      <div class="toolbar__group">
+        <router-link class="btn btn-primary" to="/teacher/enrollments/create">
+          Create enrollment
+        </router-link>
+      </div>
     </div>
 
-    <div class="overflow-x-auto bg-white shadow-md rounded-lg">
-      <table class="w-full text-left border-collapse">
-        <thead>
-          <tr class="bg-gray-200 border-b">
-            <th class="py-2 px-4 text-gray-700 font-semibold">Students</th>
-            <th class="py-2 px-4 text-gray-700 font-semibold">Subjects</th>
-            <th class="py-2 px-4 text-gray-700 font-semibold">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            v-for="enrollment in filteredEnrollments"
-            :key="enrollment.id"
-            class="border-b hover:bg-gray-50"
-          >
-            <td class="py-2 px-4">{{ enrollment.student.name }}</td>
-            <td class="py-2 px-4">{{ enrollment.subject.title }}</td>
-            <td class="py-2 px-4">
-              <button
-                class="text-blue-500 hover:underline mr-4"
-                @click="editEnrollment(enrollment)"
-              >
-                Edit
-              </button>
-              <button
-                class="text-red-500 hover:underline"
-                @click="deleteEnrollment(enrollment.id)"
-              >
-                Delete
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+    <p v-if="notice" class="alert alert-success" role="status">
+      {{ notice }}
+    </p>
 
-    <router-link to="/teacher/enrollments/create">
-      <button
-        class="mt-6 px-4 py-2 bg-blue-500 text-white font-semibold rounded hover:bg-blue-600 transition duration-300"
-      >
-        Create Enrollment
+    <p v-if="loadError" class="alert alert-error" role="alert">
+      {{ loadError }}
+      <button type="button" class="btn btn-ghost alert__action" @click="reload">
+        Try again
       </button>
-    </router-link>
+    </p>
 
-    <div
-      v-if="editingEnrollment"
-      class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center"
+    <p v-if="actionError" class="alert alert-error" role="alert">
+      {{ actionError }}
+    </p>
+
+    <PanelCard
+      v-if="!loadError"
+      title="All enrollments"
+      :loading="loading"
+      :empty="!filteredEnrollments.length"
+      :empty-title="
+        hasEnrollments
+          ? 'No enrollments match your search'
+          : 'Nobody is enrolled yet'
+      "
+      :empty-text="
+        hasEnrollments
+          ? 'Try a different word, or clear the search box.'
+          : 'Enrol a student into a subject to get started.'
+      "
     >
-      <div class="bg-white p-6 rounded-md shadow-lg">
-        <h3 class="text-xl font-semibold mb-4">Edit Enrollment</h3>
-        <div class="mb-4">
-          <label class="block mb-2">Student</label>
+      <div class="table-wrap">
+        <table class="table enrollment-table">
+          <thead>
+            <tr>
+              <th scope="col">Student</th>
+              <th scope="col">Subject</th>
+              <th scope="col">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="enrollment in filteredEnrollments" :key="enrollment.id">
+              <td>{{ enrollment.student.name }}</td>
+              <td>{{ enrollment.subject.title }}</td>
+              <td>
+                <button
+                  type="button"
+                  class="action-link"
+                  @click="editEnrollment(enrollment)"
+                >
+                  Edit
+                </button>
+                <button
+                  type="button"
+                  class="action-link action-link--danger"
+                  @click="askDelete(enrollment)"
+                >
+                  Delete
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </PanelCard>
+
+    <!-- Edit dialog.  The two selects are the whole form, so the dialog's own
+         confirming button is the submit action. -->
+    <ModalPopup
+      :is-visible="editingEnrollment"
+      title="Edit enrollment"
+      confirm-label="Save changes"
+      :message="editMessage"
+      @confirm="updateEnrollment"
+      @cancel="cancelEdit"
+    >
+      <div class="form">
+        <div>
+          <label class="form-label" for="edit-student">Student</label>
           <select
+            id="edit-student"
             v-model="form.student_id"
-            class="p-2 border border-gray-300 rounded-md w-full"
+            class="form-field"
             @change="updateStudentName"
           >
             <option
@@ -76,11 +123,12 @@
             </option>
           </select>
         </div>
-        <div class="mb-4">
-          <label class="block mb-2">Subject</label>
+        <div>
+          <label class="form-label" for="edit-subject">Subject</label>
           <select
+            id="edit-subject"
             v-model="form.subject_id"
-            class="p-2 border border-gray-300 rounded-md w-full"
+            class="form-field"
             @change="updateSubjectTitle"
           >
             <option
@@ -92,57 +140,75 @@
             </option>
           </select>
         </div>
-        <button
-          class="px-4 py-2 bg-blue-500 text-white font-semibold rounded hover:bg-blue-600"
-          @click="updateEnrollment"
-        >
-          Update
-        </button>
-        <button
-          class="px-4 py-2 ml-4 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
-          @click="cancelEdit"
-        >
-          Cancel
-        </button>
       </div>
-    </div>
+    </ModalPopup>
+
+    <ModalPopup
+      :is-visible="showModal"
+      tone="danger"
+      title="Delete this enrollment?"
+      confirm-label="Delete"
+      :message="deleteMessage"
+      @confirm="confirmDelete"
+      @cancel="cancelDelete"
+    />
   </div>
 </template>
 
 <script>
 import axios from "@/axios";
 import { ref, onMounted, computed } from "vue";
+import { apiErrorMessage } from "@/apiError";
+import PanelCard from "@/components/PanelCard.vue";
+import ModalPopup from "@/views/ModalPopup.vue";
 
 export default {
+  name: "EnrollmentList",
+  components: { PanelCard, ModalPopup },
   setup() {
     const enrollments = ref([]);
     const searchQuery = ref("");
     const students = ref([]);
     const subjects = ref([]);
     const editingEnrollment = ref(false);
-    const form = ref({
-      student_id: "",
-      subject_id: "",
-    });
+    const form = ref({ student_id: "", subject_id: "" });
     const student_name = ref("");
     const subject_title = ref("");
     const currentEnrollmentId = ref(null);
+    const loading = ref(true);
+    const loadError = ref("");
+    const actionError = ref("");
+    const notice = ref("");
+    const showModal = ref(false);
+    const enrollmentToDelete = ref(null);
 
     const fetchEnrollments = async () => {
+      loading.value = true;
+      loadError.value = "";
       try {
         const response = await axios.get("/teacher/enrollments");
         enrollments.value = response.data;
       } catch (error) {
-        console.error(error);
+        loadError.value = apiErrorMessage(
+          error,
+          "We couldn't load the enrollments.",
+        );
+      } finally {
+        loading.value = false;
       }
     };
 
+    /* The two pickers only matter once the edit dialog opens, so a failure
+       here is reported without hiding the table that did load. */
     const fetchStudents = async () => {
       try {
         const response = await axios.get("/teacher/getStudents");
         students.value = response.data;
       } catch (error) {
-        console.error(error);
+        actionError.value = apiErrorMessage(
+          error,
+          "We couldn't load the student list needed to edit an enrollment.",
+        );
       }
     };
 
@@ -151,18 +217,32 @@ export default {
         const response = await axios.get("/teacher/getSubjects");
         subjects.value = response.data;
       } catch (error) {
-        console.error(error);
+        actionError.value = apiErrorMessage(
+          error,
+          "We couldn't load the subject list needed to edit an enrollment.",
+        );
       }
     };
 
+    const reload = async () => {
+      await fetchEnrollments();
+      await fetchStudents();
+      await fetchSubjects();
+    };
+
+    /* Null-safe: an enrollment whose student or subject row is missing used to
+       throw inside this computed and blank the entire table. */
     const filteredEnrollments = computed(() => {
-      const query = searchQuery.value.toLowerCase();
-      return enrollments.value.filter(
-        (enrollment) =>
-          enrollment.student.name.toLowerCase().includes(query) ||
-          enrollment.subject.title.toLowerCase().includes(query),
-      );
+      const query = searchQuery.value.trim().toLowerCase();
+      if (!query) return enrollments.value;
+      return enrollments.value.filter((enrollment) => {
+        const name = enrollment.student ? enrollment.student.name : "";
+        const title = enrollment.subject ? enrollment.subject.title : "";
+        return `${name} ${title}`.toLowerCase().includes(query);
+      });
     });
+
+    const hasEnrollments = computed(() => enrollments.value.length > 0);
 
     const editEnrollment = (enrollment) => {
       editingEnrollment.value = true;
@@ -171,6 +251,7 @@ export default {
       student_name.value = enrollment.student.name;
       subject_title.value = enrollment.subject.title;
       currentEnrollmentId.value = enrollment.id;
+      notice.value = "";
     };
 
     const cancelEdit = () => {
@@ -181,60 +262,81 @@ export default {
       subject_title.value = "";
       currentEnrollmentId.value = null;
     };
+
     const updateEnrollment = async () => {
+      actionError.value = "";
+      const id = currentEnrollmentId.value;
       try {
-        await axios.put(`/teacher/enrollments/${currentEnrollmentId.value}`, {
+        await axios.put(`/teacher/enrollments/${id}`, {
           student_id: form.value.student_id,
           subject_id: form.value.subject_id,
           student_name: student_name.value,
           subject_title: subject_title.value,
         });
-        alert("Enrollment updated successfully");
-        fetchEnrollments();
         cancelEdit();
+        await fetchEnrollments();
+        notice.value = "Enrollment updated.";
       } catch (error) {
-        console.error("Error updating enrollment:", error);
+        actionError.value = apiErrorMessage(
+          error,
+          "We couldn't update that enrollment.",
+        );
       }
     };
 
-    const deleteEnrollment = async (id) => {
-      if (confirm("Are you sure you want to delete this enrollment?")) {
-        try {
-          await axios.delete(`/teacher/enrollments/${id}`);
-          alert("Enrollment deleted successfully");
-          fetchEnrollments();
-        } catch (error) {
-          console.error("Error deleting enrollment:", error);
-        }
+    const askDelete = (enrollment) => {
+      enrollmentToDelete.value = enrollment;
+      showModal.value = true;
+    };
+
+    const cancelDelete = () => {
+      showModal.value = false;
+      enrollmentToDelete.value = null;
+    };
+
+    const confirmDelete = async () => {
+      const enrollment = enrollmentToDelete.value;
+      showModal.value = false;
+      enrollmentToDelete.value = null;
+      if (!enrollment) return;
+      notice.value = "";
+      actionError.value = "";
+      try {
+        await axios.delete(`/teacher/enrollments/${enrollment.id}`);
+        enrollments.value = enrollments.value.filter(
+          (e) => e.id !== enrollment.id,
+        );
+        notice.value = `${enrollment.student.name} was removed from ${enrollment.subject.title}.`;
+      } catch (error) {
+        actionError.value = apiErrorMessage(
+          error,
+          "We couldn't delete that enrollment.",
+        );
       }
     };
 
     const updateStudentName = () => {
-      const selectedStudent = students.value.find(
+      const selected = students.value.find(
         (student) => student.id === form.value.student_id,
       );
-      student_name.value = selectedStudent ? selectedStudent.name : "";
+      student_name.value = selected ? selected.name : "";
     };
 
     const updateSubjectTitle = () => {
-      const selectedSubject = subjects.value.find(
+      const selected = subjects.value.find(
         (subject) => subject.id === form.value.subject_id,
       );
-      subject_title.value = selectedSubject ? selectedSubject.title : "";
+      subject_title.value = selected ? selected.title : "";
     };
 
-    onMounted(() => {
-      fetchEnrollments();
-      fetchStudents();
-      fetchSubjects();
-    });
+    onMounted(reload);
 
     return {
       enrollments,
       searchQuery,
       filteredEnrollments,
+      hasEnrollments,
       editEnrollment,
-      deleteEnrollment,
       editingEnrollment,
       form,
       students,
@@ -243,7 +345,38 @@ export default {
       updateSubjectTitle,
       updateEnrollment,
       cancelEdit,
+      loading,
+      loadError,
+      actionError,
+      notice,
+      showModal,
+      askDelete,
+      cancelDelete,
+      confirmDelete,
+      reload,
+      student_name,
+      // Read by the `editMessage` / `deleteMessage` computeds below: a computed
+      // cannot see a `setup()` ref that is not returned, and the only symptom
+      // is a console warning.
+      enrollmentToDelete,
     };
+  },
+  computed: {
+    editMessage() {
+      const name = this.student_name || "This student";
+      return `Moving ${name} to a different subject changes which tasks they see.`;
+    },
+    deleteMessage() {
+      const e = this.enrollmentToDelete;
+      if (!e) return "This cannot be undone.";
+      return `${e.student.name} will be removed from ${e.subject.title}, and will no longer see its tasks. This cannot be undone.`;
+    },
   },
 };
 </script>
+
+<style scoped>
+.enrollment-table {
+  min-width: 34rem;
+}
+</style>

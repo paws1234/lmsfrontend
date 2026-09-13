@@ -206,3 +206,84 @@ A4→T4.2/T4.3, A5→T0.2, A6→T2.1, A7→T0.1/T0.3, A8→T4.3, A9→T4.5, A10�
 
 T0 (all) → T2.1 (unblocks dark mode) → T4.1–T4.7 (user-visible bugs) → T3 → T2.2–T2.6 → T4.8–T4.9 →
 T5 → T1 recurring → T6. T1/T3.1 run again after any change that touches the build or auth markup.
+
+---
+
+## 6. T5.2–T5.4 finished for every remaining view (done 2026-09-13)
+
+T5.2–T5.4 were previously closed for the **three dashboards only**; the other ~29 views still had their
+own page padding, their own 80px `.loader` (copied into nine of them, with hard-coded light-only colours),
+a `min-h-screen bg-blue-50 p-6` wrapper that fought the shell, and `console.error` where an error message
+belonged. This pass covers the remaining **23 content views** plus the shared dialog.
+
+### New shared pieces
+
+- **`app.css` gained the patterns those views were each inventing**: `.toolbar` / `.search`,
+  `.record-list` / `.record` / `.record__title` / `.record__meta` / `.record__facts` / `.record__actions`,
+  `.action-link` (+ `--danger`), `.table-wrap` / `.table`, `.form` / `.form-grid` / `.form-error` /
+  `.form-actions` / `.form-narrow`, `.badge` (+ `--info` / `--success` / `--danger`), `.tabs` /
+  `.tabs__tab`, `.modal` / `.modal__panel` / `.modal__title` / `.modal__body` / `.modal__actions`,
+  `.card-pad`, `.stack` and `.section-title`. All are token-based, so they are correct in both themes
+  without a `dark:` counterpart.
+- **`src/cloudinary.js`** — the attachment upload was duplicated in `TodoCreate` and `TodoEdit`,
+  including the `resourceType` guess. One exported `uploadAttachment(file)` now throws on a non-2xx so
+  the form can say so.
+- **`ModalPopup.vue` was rebuilt**: `role="dialog"` + `aria-modal` + `aria-labelledby` /
+  `aria-describedby`, Escape closes, backdrop click closes, focus moves into the panel and returns to
+  the trigger, body scroll is locked while open, `tone="danger"` for a destructive confirm, and an
+  empty `cancelLabel` hides the second button for a read-only dialog. Callers unchanged.
+
+### Per-page work
+
+| Area | Pages | What changed |
+|------|-------|--------------|
+| Admin lists | `CourseList`, `StudentList`, `TeacherList` | `.page` head, toolbar, `PanelCard` + `.record-list`; **`confirm()` replaced by the styled dialog**; optimistic row removal + a success notice |
+| Admin forms | `CourseCreate`, `CourseEdit`, `StudentForm`, `TeacherForm`, `TeacherUpdate` | `.form-narrow` card; linked labels; `autocomplete`; **live password-match validation** (`aria-invalid` + `aria-describedby` to `.form-error`, submit disabled) replacing `alert()`; skeleton while the record loads |
+| Admin managers | `ScheduleManager`, `EventHandlerManager` | add/edit form in a card with `aria-expanded` on the toggle; **load failure and action failure are separate states**, so a rejected save cannot hide the list still on screen; per-row Edit/Delete; modal delete |
+| Teacher lists | `SubjectList`, `TodoList`, `EnrollmentList`, `QuestionList` | search in a labelled `type="search"` field; `.table` with `scope="col"` inside `.table-wrap`; badges for type/schedule; **null-safe filters** (a TODO with no description used to throw inside the computed and blank the table); `alert()`/`confirm()` replaced by inline notices and dialogs; the question list regroups subject → topic with the correct answer marked |
+| Teacher forms | `SubjectCreate`, `SubjectEdit`, `TodoCreate`, `TodoEdit`, `QuestionForm`, `EnrollmentForm` | shared `.form`; upload status announced instead of only `console.error`; the answer-removal button is disabled exactly when removal is refused; the last question/choice cannot be removed into an unsubmittable state |
+| Student | `EnrolledSubjects`, `StudentScores`, `StudentTasks` | `.page` head; **the review trigger is a `<button>`, not a `<span @click>`**; the review table is a real `.table` inside the dialog; `StudentTasks` lost its `lg:ml-64` (the shell already offsets the content) and its tabs are `role="tablist"`/`tab`/`tabpanel`; **the "answer these questions" button is rendered once per day** instead of once per question via a hidden-span hack |
+
+### Behaviour changes (no API contract change)
+
+- A failed request renders the API's own message and a retry, never a plausible-looking zero or an empty
+  list that means "we could not load this".
+- Delete and edit confirmations are in-app dialogs; `alert()` and `confirm()` are gone from these views.
+- `StudentTasks` no longer collapses subjects behind a "Show Questions" button that defaulted to hidden.
+- Removing a question or an answer is refused at the boundary (the button is disabled) rather than
+  silently doing nothing.
+
+### Verification (measured, not assumed)
+
+- **Every route, both themes: 0 WCAG failures** below 3:1 — 15 admin/public routes (8–32 text-bearing
+  elements each) and 13 teacher/student routes, with a positive control (`#cccccc` on white = 1.6:1)
+  confirmed caught by the walker on each sweep.
+- **`scrollWidth − clientWidth` = 0 at 390 / 768 / 1440** on all 28 routes.
+- **One `<h1>` per page, no skipped heading level** anywhere (was: pages titled `<h2>`, and `h1` missing
+  entirely on several).
+- Every route's API call returned **200**; pages that legitimately have no data show a real empty state
+  (`No subjects yet`, `Nobody is enrolled yet`, `No TODOs yet`, `No questions yet`).
+- **`npm run build` succeeds**; `dist/css/app.css` 35.20 KiB raw / 7.73 KiB gzip (baseline 31.1 KiB /
+  6.9 KiB — inside the T1.2 budget of 60 KiB / 12 KiB), JS 343 KiB / 104.9 KiB gzip.
+- **Lint 555 → 136 warnings, 0 errors**, and **every remaining warning is in a file this pass did not
+  touch** (15 files: layouts, the dashboards, the auth pages, `axios.js`, `router/index.js`, `AppSidebar`).
+- **Zero Vue warnings** in the console on the routes checked, after two "computed reads a `setup()` ref
+  that was never returned" bugs were found and fixed (`EventHandlerManager`, `EnrollmentList`).
+
+### Two bugs this pass introduced and then fixed
+
+- `aria-describedby="expr ? 'x' : null"` **without the `:` binding** ships the literal expression as the
+  attribute value. It looks right in the source and the message is still visible, so only reading the
+  attribute back catches it.
+- Registering a component under one name and using another fails the **dev-server build** with
+  `vue/no-unused-components`, and the error overlay can be **stale** (cleared by deleting
+  `node_modules/.cache/eslint`).
+
+### Known issues left open (not introduced here)
+
+- `student/StudentList.vue` still calls `/student/1/subjects` with a hard-coded id, so every student sees
+  student 1's enrolments. The endpoint requires an id and there is no "current student" variant, so
+  fixing it changes what the page asks the API for.
+- `student/QuestionList.vue` is a **0-byte orphan** — nothing imports it.
+- The 136 remaining lint warnings belong to files outside this pass (see above).
+

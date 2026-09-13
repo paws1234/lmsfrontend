@@ -1,56 +1,55 @@
 <template>
-  <div class="min-h-screen bg-blue-50 p-6 flex flex-col items-center">
-    <div class="max-w-4xl w-full bg-white shadow-md rounded-lg p-6">
-      <h1 class="text-3xl font-bold mb-6 text-gray-900 text-center">
-        Edit Course
-      </h1>
-      <form class="space-y-6" @submit.prevent="updateCourse">
-        <div class="mb-4">
-          <label
-            class="block text-blue-900 text-sm font-medium mb-2"
-            for="title"
-            >Title</label
-          >
+  <div class="page">
+    <header class="page__head">
+      <p class="page__eyebrow">Catalogue</p>
+      <h1 class="page__title">Edit course</h1>
+      <p class="page__lead">
+        Changes apply to every student already enrolled in this course.
+      </p>
+    </header>
+
+    <p v-if="error" class="alert alert-error" role="alert">{{ error }}</p>
+
+    <div class="card card-pad form-narrow">
+      <!-- The form is only meaningful once the record has arrived, so the
+           skeleton stands in for it rather than showing empty inputs that
+           would then fill in underneath the user. -->
+      <div v-if="loading" class="form" aria-hidden="true">
+        <span class="skeleton form__skeleton"></span>
+        <span class="skeleton form__skeleton form__skeleton--tall"></span>
+        <p class="sr-only" role="status">Loading course…</p>
+      </div>
+
+      <form v-else class="form" @submit.prevent="updateCourse">
+        <div>
+          <label class="form-label" for="title">Title</label>
           <input
             id="title"
             v-model="course.title"
+class="form-field"
             type="text"
-            class="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150"
-            placeholder="Enter course title"
-            aria-required="true"
-            aria-describedby="title-helper"
+placeholder="Course title"
+            autocomplete="off" required
           />
         </div>
-        <div class="mb-4">
-          <label
-            class="block text-blue-900 text-sm font-medium mb-2"
-            for="description"
-            >Description</label
-          >
+
+        <div>
+          <label class="form-label" for="description">Description</label>
           <textarea
             id="description"
             v-model="course.description"
-            class="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150"
+class="form-field"
             rows="5"
-            placeholder="Enter course description"
-            aria-required="true"
-            aria-describedby="description-helper"
+            placeholder="What this course covers"
           ></textarea>
         </div>
-        <div class="flex space-x-4">
-          <button
-            type="submit"
-            class="bg-blue-600 text-white px-6 py-3 rounded-md shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150"
-            aria-live="polite"
-          >
-            Save
+
+        <div class="form-actions">
+          <button class="btn btn-primary" type="submit" :disabled="saving">
+            {{ saving ? "Saving…" : "Save changes" }}
           </button>
-          <router-link
-            to="/admin/courses"
-            class="inline-block px-6 py-3 bg-gray-600 text-white rounded-md shadow hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 transition duration-150 text-center"
-            aria-label="Back to Course List"
-          >
-            Back to List
+          <router-link class="btn btn-ghost" to="/admin/courses">
+            Cancel
           </router-link>
         </div>
       </form>
@@ -60,23 +59,54 @@
 
 <script>
 import axios from "@/axios";
+import { apiErrorMessage } from "@/apiError";
 
 export default {
+  name: "CourseEdit",
   data() {
     return {
       course: {
         title: "",
         description: "",
       },
+      // Starts true: the record has to be fetched before the fields mean
+      // anything.
+      loading: true,
+      saving: false,
+      error: "",
     };
   },
+  created() {
+    this.fetchCourse();
+  },
   methods: {
+    async fetchCourse() {
+      this.loading = true;
+      this.error = "";
+      try {
+        const response = await axios.get(
+          `/admin/courses/${this.$route.params.id}`,
+        );
+        this.course = response.data;
+      } catch (error) {
+        this.error = apiErrorMessage(error, "We couldn't load this course.");
+      } finally {
+        this.loading = false;
+      }
+    },
     async updateCourse() {
+      this.saving = true;
+      this.error = "";
       try {
         await axios.put(`/admin/courses/${this.$route.params.id}`, this.course);
         this.$router.push("/admin/courses");
       } catch (error) {
-        console.error("Error updating course:", error);
+        this.error = apiErrorMessage(
+          error,
+          "We couldn't save your changes. Please try again.",
+        );
+      } finally {
+        this.saving = false;
       }
     },
   },
@@ -84,12 +114,13 @@ export default {
 </script>
 
 <style scoped>
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
+/* The loading skeleton stands in for the two fields, so it has to occupy
+   roughly the same space or the card jumps when the data lands. */
+.form__skeleton {
+  display: block;
+  height: 2.75rem;
+}
+.form__skeleton--tall {
+  height: 8rem;
 }
 </style>

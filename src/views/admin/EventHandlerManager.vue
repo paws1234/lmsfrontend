@@ -1,153 +1,210 @@
 <template>
-  <div class="min-h-screen bg-blue-50 p-6">
-    <h1 class="text-3xl font-bold text-blue-900 mb-6 text-center">
-      School Events
-    </h1>
-    <div
-      v-if="loading"
-      class="flex flex-col items-center justify-center space-y-4 mb-6"
-    >
-      <div class="loader"></div>
-      <p class="text-blue-600 text-lg font-medium">Loading event handlers...</p>
+  <div class="page">
+    <header class="page__head">
+      <p class="page__eyebrow">Calendar</p>
+      <h1 class="page__title">School events</h1>
+      <p class="page__lead">
+        Events appear on every dashboard, so this is the place to announce
+        enrolment periods, examinations and campus activities.
+      </p>
+    </header>
+
+    <div class="toolbar">
+      <div class="toolbar__group">
+        <button
+          type="button"
+          class="btn btn-primary"
+          :aria-expanded="showForm ? 'true' : 'false'"
+          aria-controls="event-form"
+          @click="toggleForm"
+        >
+          {{ showForm ? "Close form" : "Add an event" }}
+        </button>
+      </div>
     </div>
 
-    <p v-if="error" class="text-red-600 text-lg font-medium text-center mb-6">
-      Error loading event handlers. Please try again later.
+    <p v-if="notice" class="alert alert-success" role="status">
+      {{ notice }}
     </p>
 
-    <button
-      class="bg-blue-600 text-white px-6 py-3 rounded-md shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150 mb-6"
-      @click="toggleForm"
-    >
-      {{ showForm ? "Hide Form" : "Add New Event" }}
-    </button>
-
-    <form
-      v-if="showForm"
-      class="bg-blue-100 p-8 rounded-lg shadow-md mb-6"
-      @submit.prevent="saveEventHandler"
-    >
-      <h2 class="text-xl font-bold mb-4 text-blue-900">
-        {{ isEditing ? "Edit Event Handler" : "Add New Event Handler" }}
-      </h2>
-      <div class="mb-6">
-        <label for="name" class="block text-blue-900 text-lg font-medium">
-          Name
-        </label>
-        <input
-          id="name"
-          v-model="form.name"
-          type="text"
-          class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
-          required
-        />
-      </div>
-      <div class="mb-6">
-        <label
-          for="description"
-          class="block text-blue-900 text-lg font-medium"
-        >
-          Description
-        </label>
-        <textarea
-          id="description"
-          v-model="form.description"
-          rows="4"
-          class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
-          required
-        ></textarea>
-      </div>
-      <div class="mb-6">
-        <label for="event_date" class="block text-blue-900 text-lg font-medium">
-          Event Date
-        </label>
-        <input
-          id="event_date"
-          v-model="form.date"
-          type="date"
-          class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
-          required
-        />
-      </div>
+    <p v-if="loadError" class="alert alert-error" role="alert">
+      {{ loadError }}
       <button
-        type="submit"
-        class="bg-blue-600 text-white px-6 py-3 rounded-md shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150"
+        type="button"
+        class="btn btn-ghost alert__action"
+        @click="fetchEventHandlers"
       >
-        {{ isEditing ? "Update Event" : "Add Event " }}
+        Try again
       </button>
-    </form>
+    </p>
 
-    <div v-if="eventHandlers.length" class="bg-blue-100 p-6 rounded-lg shadow-md">
-      <ul class="space-y-4">
+    <p v-if="actionError" class="alert alert-error" role="alert">
+      {{ actionError }}
+    </p>
+
+    <div
+      v-if="showForm"
+      id="event-form"
+      class="card card-pad form-narrow stack"
+    >
+      <h2 class="section-title">
+        {{ isEditing ? "Edit event" : "New event" }}
+      </h2>
+
+      <form class="form" @submit.prevent="saveEventHandler">
+        <div>
+          <label class="form-label" for="name">Name</label>
+          <input
+            id="name"
+            v-model="form.name"
+            class="form-field"
+            type="text"
+            placeholder="e.g. Midterm examinations"
+            required
+          />
+        </div>
+
+        <div>
+          <label class="form-label" for="description">Description</label>
+          <textarea
+            id="description"
+            v-model="form.description"
+            class="form-field"
+            rows="4"
+            placeholder="What students and teachers need to know"
+            required
+          ></textarea>
+        </div>
+
+        <div>
+          <label class="form-label" for="event_date">Date</label>
+          <input
+            id="event_date"
+            v-model="form.date"
+            class="form-field"
+            type="date"
+            required
+          />
+        </div>
+
+        <div class="form-actions">
+          <button class="btn btn-primary" type="submit" :disabled="saving">
+            {{ saving ? "Saving…" : isEditing ? "Save changes" : "Add event" }}
+          </button>
+          <button type="button" class="btn btn-ghost" @click="toggleForm">
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <p v-if="loading" class="sr-only" role="status">Loading events…</p>
+
+    <PanelCard
+      v-else-if="!loadError"
+      title="All events"
+      :empty="!eventHandlers.length"
+      empty-title="No events yet"
+      empty-text="Add the first event and it will appear on every dashboard."
+    >
+      <ul class="record-list">
         <li
           v-for="eventHandler in eventHandlers"
           :key="eventHandler.id"
-          class="p-4 border-b border-gray-200 flex items-start justify-between"
+          class="record"
         >
-          <div class="flex-1">
-            <h2 class="text-lg font-semibold text-blue-900">
-              {{ eventHandler.name }}
-            </h2>
-            <p class="text-blue-900">
-              Description: {{ eventHandler.description }}<br />
-              <span class="text-blue-900">Date: {{ eventHandler.date }}</span>
+          <div>
+            <h3 class="record__title">{{ eventHandler.name }}</h3>
+            <p v-if="eventHandler.description" class="record__meta">
+              {{ eventHandler.description }}
             </p>
           </div>
-          <div class="ml-4 flex-shrink-0 space-x-4">
+          <div class="record__actions">
+            <time
+              v-if="eventHandler.date"
+              :datetime="eventHandler.date"
+              class="badge"
+            >
+              {{ formatDate(eventHandler.date) }}
+            </time>
             <button
-              class="text-blue-600 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150"
+              type="button"
+              class="action-link"
               @click="editEventHandler(eventHandler)"
             >
               Edit
             </button>
             <button
-              class="bg-red-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 transition duration-150"
-              @click="deleteEventHandler(eventHandler.id)"
+              type="button"
+              class="action-link action-link--danger"
+              @click="askDelete(eventHandler)"
             >
               Delete
             </button>
           </div>
         </li>
       </ul>
-    </div>
+    </PanelCard>
 
-    <p
-      v-if="!eventHandlers.length && !loading && !error"
-      class="text-gray-600 text-lg font-medium text-center"
-    >
-      No event handlers found.
-    </p>
+    <ModalPopup
+      :is-visible="showModal"
+      tone="danger"
+      title="Delete this event?"
+      confirm-label="Delete"
+      :message="deleteMessage"
+      @confirm="confirmDelete"
+      @cancel="cancelDelete"
+    />
   </div>
 </template>
 
 <script>
 import axios from "@/axios";
 import { ref, onMounted } from "vue";
+import { apiErrorMessage } from "@/apiError";
+import PanelCard from "@/components/PanelCard.vue";
+import ModalPopup from "@/views/ModalPopup.vue";
+
+/* `2026-10-01` — what `<input type="date">` submits.  The same date-only
+   handling as `EventList.vue`: `new Date("2026-10-01")` is UTC midnight, so
+   west of Greenwich it would print as the 30th. */
+const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
+const DATE_FORMAT = new Intl.DateTimeFormat(undefined, {
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+});
+
+const blankForm = () => ({ name: "", description: "", date: "" });
 
 export default {
   name: "EventHandlerManager",
+  components: { PanelCard, ModalPopup },
   setup() {
     const eventHandlers = ref([]);
-    const form = ref({
-      name: "",
-      description: "",
-      date: "",
-    });
+    const form = ref(blankForm());
     const isEditing = ref(false);
     const currentEventHandlerId = ref(null);
     const loading = ref(true);
-    const error = ref(false);
+    const saving = ref(false);
+    const loadError = ref("");
+    const actionError = ref("");
+    const notice = ref("");
     const showForm = ref(false);
+    const showModal = ref(false);
+    const eventToDelete = ref(null);
 
     const fetchEventHandlers = async () => {
       loading.value = true;
-      error.value = false;
+      loadError.value = "";
       try {
         const response = await axios.get("/admin/event-handlers");
         eventHandlers.value = response.data;
       } catch (err) {
-        console.error("Error fetching event handlers:", err);
-        error.value = true;
+        loadError.value = apiErrorMessage(
+          err,
+          "We couldn't load the school events.",
+        );
       } finally {
         loading.value = false;
       }
@@ -159,39 +216,70 @@ export default {
         : "/admin/event-handlers";
       const method = isEditing.value ? "put" : "post";
 
+      saving.value = true;
+      actionError.value = "";
+      notice.value = "";
       try {
         await axios[method](url, form.value);
-        form.value = {
-          name: "",
-          description: "",
-          date: "",
-        };
+        const wasEditing = isEditing.value;
+        form.value = blankForm();
         isEditing.value = false;
         currentEventHandlerId.value = null;
         showForm.value = false;
         await fetchEventHandlers();
+        notice.value = wasEditing ? "Event updated." : "Event added.";
       } catch (err) {
-        console.error("Error saving event handler:", err);
-        error.value = true;
+        actionError.value = apiErrorMessage(
+          err,
+          "We couldn't save this event. Please try again.",
+        );
+      } finally {
+        saving.value = false;
       }
     };
 
     const editEventHandler = (eventHandler) => {
-      form.value = { ...eventHandler };
+      // Copied field by field, not spread: the record also carries an `id`
+      // that must not be sent back in the body.
+      form.value = {
+        name: eventHandler.name,
+        description: eventHandler.description,
+        date: eventHandler.date,
+      };
       isEditing.value = true;
       currentEventHandlerId.value = eventHandler.id;
       showForm.value = true;
+      notice.value = "";
     };
 
-    const deleteEventHandler = async (id) => {
-      if (confirm("Are you sure you want to delete this event handler?")) {
-        try {
-          await axios.delete(`/admin/event-handlers/${id}`);
-          await fetchEventHandlers();
-        } catch (err) {
-          console.error("Error deleting event handler:", err);
-          error.value = true;
-        }
+    const askDelete = (eventHandler) => {
+      eventToDelete.value = eventHandler;
+      showModal.value = true;
+    };
+
+    const cancelDelete = () => {
+      showModal.value = false;
+      eventToDelete.value = null;
+    };
+
+    const confirmDelete = async () => {
+      const eventHandler = eventToDelete.value;
+      showModal.value = false;
+      eventToDelete.value = null;
+      if (!eventHandler) return;
+      notice.value = "";
+      actionError.value = "";
+      try {
+        await axios.delete(`/admin/event-handlers/${eventHandler.id}`);
+        eventHandlers.value = eventHandlers.value.filter(
+          (item) => item.id !== eventHandler.id,
+        );
+        notice.value = `“${eventHandler.name}” was deleted.`;
+      } catch (err) {
+        actionError.value = apiErrorMessage(
+          err,
+          "We couldn't delete that event.",
+        );
       }
     };
 
@@ -199,12 +287,21 @@ export default {
       showForm.value = !showForm.value;
       if (showForm.value) {
         isEditing.value = false;
-        form.value = {
-          name: "",
-          description: "",
-          date: "",
-        };
+        currentEventHandlerId.value = null;
+        form.value = blankForm();
       }
+    };
+
+    /** Unparseable values print verbatim rather than as "Invalid Date". */
+    const formatDate = (value) => {
+      const date = DATE_ONLY.test(value)
+        ? new Date(
+            Number(value.slice(0, 4)),
+            Number(value.slice(5, 7)) - 1,
+            Number(value.slice(8, 10)),
+          )
+        : new Date(value);
+      return Number.isNaN(date.getTime()) ? value : DATE_FORMAT.format(date);
     };
 
     onMounted(fetchEventHandlers);
@@ -215,40 +312,31 @@ export default {
       isEditing,
       saveEventHandler,
       editEventHandler,
-      deleteEventHandler,
       loading,
-      error,
+      saving,
+      loadError,
+      actionError,
+      notice,
       showForm,
       toggleForm,
+      showModal,
+      askDelete,
+      cancelDelete,
+      confirmDelete,
+      formatDate,
+      fetchEventHandlers,
+      // Read by the `deleteMessage` computed below: a computed cannot see a
+      // `setup()` ref that is not returned, and the failure is silent apart
+      // from a console warning.
+      eventToDelete,
     };
+  },
+  computed: {
+    deleteMessage() {
+      const e = this.eventToDelete;
+      if (!e) return "This cannot be undone.";
+      return `“${e.name}” will be removed from every dashboard. This cannot be undone.`;
+    },
   },
 };
 </script>
-
-<style scoped>
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-.loader {
-  border: 8px solid #f3f3f3;
-  border-top: 8px solid #3498db;
-  border-radius: 50%;
-  width: 80px;
-  height: 80px;
-  animation: spin 1.5s linear infinite;
-}
-
-input:focus,
-textarea:focus,
-button:focus,
-a:focus {
-  outline: none;
-  box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.5);
-}
-</style>

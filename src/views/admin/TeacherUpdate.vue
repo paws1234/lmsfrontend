@@ -1,82 +1,70 @@
 <template>
-  <div class="min-h-screen bg-blue-50 p-6 flex flex-col items-center">
-    <h1 class="text-3xl font-bold text-gray-900 mb-6 text-center">
-      Update Teacher
-    </h1>
-    <div
-      v-if="loading"
-      class="flex flex-col items-center justify-center space-y-4 mb-6"
-    >
-      <div class="loader"></div>
-      <p class="text-blue-600 text-lg font-medium">Updating...</p>
+  <div class="page">
+    <header class="page__head">
+      <p class="page__eyebrow">People</p>
+      <h1 class="page__title">Edit teacher</h1>
+      <p class="page__lead">
+        Update this teacher's name, email address or password.
+      </p>
+    </header>
+
+    <p v-if="error" class="alert alert-error" role="alert">{{ error }}</p>
+
+    <div class="card card-pad form-narrow">
+      <div v-if="loading" class="form" aria-hidden="true">
+        <span class="skeleton form__skeleton"></span>
+        <span class="skeleton form__skeleton"></span>
+        <p class="sr-only" role="status">Loading teacher…</p>
+      </div>
+
+      <form v-else class="form" @submit.prevent="submitForm">
+        <div>
+          <label class="form-label" for="name">Full name</label>
+          <input id="name" v-model="teacher.name"
+class="form-field"
+type="text"
+autocomplete="name" required />
+        </div>
+
+        <div>
+          <label class="form-label" for="email">Email address</label>
+          <input id="email" v-model="teacher.email"
+class="form-field"
+type="email"
+autocomplete="email" required />
+        </div>
+
+        <div>
+          <label class="form-label" for="password">Password</label>
+          <input id="password" v-model="teacher.password"
+class="form-field"
+type="password"
+            placeholder="Leave blank to keep the current password" autocomplete="off"
+            aria-describedby="password-help" />
+          <p id="password-help" class="form-help">
+            Only fill this in if you want to set a new password.
+          </p>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn btn-primary" type="submit" :disabled="saving">
+            {{ saving ? "Saving…" : "Save changes" }}
+          </button>
+          <router-link class="btn btn-ghost" to="/admin/teachers">
+            Cancel
+          </router-link>
+        </div>
+      </form>
     </div>
-    <div v-if="error" class="text-red-600 text-lg font-medium mb-6 text-center">
-      Error updating data. Please try again later.
-    </div>
-    <form
-      class="bg-white p-8 rounded-lg shadow-md w-full max-w-lg"
-      @submit.prevent="submitForm"
-    >
-      <div class="mb-6">
-        <label for="name" class="block text-gray-700 text-lg font-medium mb-2">
-          Name
-        </label>
-        <input
-          id="name"
-          v-model="teacher.name"
-          type="text"
-          class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
-          required
-        />
-      </div>
-      <div class="mb-6">
-        <label for="email" class="block text-gray-700 text-lg font-medium mb-2">
-          Email
-        </label>
-        <input
-          id="email"
-          v-model="teacher.email"
-          type="email"
-          class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
-          required
-        />
-      </div>
-      <div class="mb-6">
-        <label
-          for="password"
-          class="block text-gray-700 text-lg font-medium mb-2"
-        >
-          Password
-        </label>
-        <input
-          id="password"
-          v-model="teacher.password"
-          type="password"
-          class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
-        />
-      </div>
-      <div class="flex justify-between items-center mt-6">
-        <button
-          type="submit"
-          class="bg-blue-600 text-white px-6 py-3 rounded-md shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150"
-        >
-          Update
-        </button>
-        <router-link
-          to="/admin/teachers"
-          class="bg-gray-600 text-white px-6 py-3 rounded-md shadow-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 transition duration-150"
-        >
-          Back to List
-        </router-link>
-      </div>
-    </form>
   </div>
 </template>
 
 <script>
 import axios from "@/axios";
+import { apiErrorMessage } from "@/apiError";
 
 export default {
+  name: "TeacherUpdate",
   data() {
     return {
       teacher: {
@@ -84,29 +72,29 @@ export default {
         email: "",
         password: "",
       },
-      loading: false,
-      error: false,
+      loading: true,
+      saving: false,
+      error: "",
     };
   },
   async created() {
     const id = this.$route.params.id;
-    this.loading = true;
-
     try {
       const response = await axios.get(`/admin/teachers/${id}`);
-      this.teacher = response.data;
+      this.teacher = { ...response.data, password: "" };
     } catch (error) {
-      console.error("Error fetching teacher:", error);
-      this.error = true;
+      this.error = apiErrorMessage(
+        error,
+        "We couldn't load this teacher's details.",
+      );
     } finally {
       this.loading = false;
     }
   },
   methods: {
     async submitForm() {
-      this.loading = true;
-      this.error = false;
-
+      this.saving = true;
+      this.error = "";
       try {
         await axios.put(
           `/admin/teachers/${this.$route.params.id}`,
@@ -114,10 +102,12 @@ export default {
         );
         this.$router.push("/admin/teachers");
       } catch (error) {
-        console.error("Error updating teacher:", error);
-        this.error = true;
+        this.error = apiErrorMessage(
+          error,
+          "We couldn't save your changes. Please try again.",
+        );
       } finally {
-        this.loading = false;
+        this.saving = false;
       }
     },
   },
@@ -125,21 +115,10 @@ export default {
 </script>
 
 <style scoped>
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-.loader {
-  border: 8px solid #f3f3f3;
-  border-top: 8px solid #3498db;
-  border-radius: 50%;
-  width: 60px;
-  height: 60px;
-  animation: spin 1.5s linear infinite;
+/* Matches the height of a label + field so the card does not jump when the
+   real values replace the skeleton. */
+.form__skeleton {
+  display: block;
+  height: 2.75rem;
 }
 </style>

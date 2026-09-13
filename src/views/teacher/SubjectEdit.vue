@@ -1,51 +1,56 @@
 <template>
-  <div class="min-h-screen bg-gray-100 p-6">
-    <h2 class="text-3xl font-bold mb-6 text-gray-900 text-center">
-      Edit Subject
-    </h2>
-    <form @submit.prevent="updateSubject">
-      <div class="mb-4">
-        <label for="title" class="block text-gray-700">Title</label>
-        <input
-          id="title"
-          v-model="form.title"
-          type="text"
-          class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-          required
-        />
+  <div class="page">
+    <header class="page__head">
+      <p class="page__eyebrow">Teaching</p>
+      <h1 class="page__title">Edit subject</h1>
+      <p class="page__lead">
+        Changes are visible to every student enrolled in this subject.
+      </p>
+    </header>
+
+    <p v-if="error" class="alert alert-error" role="alert">{{ error }}</p>
+
+    <div class="card card-pad form-narrow">
+      <div v-if="loading" class="form" aria-hidden="true">
+        <span class="skeleton form__skeleton"></span>
+        <span class="skeleton form__skeleton form__skeleton--tall"></span>
+        <p class="sr-only" role="status">Loading subject…</p>
       </div>
-      <div class="mb-4">
-        <label for="description" class="block text-gray-700">Description</label>
-        <textarea
-          id="description"
-          v-model="form.description"
-          class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-        ></textarea>
-      </div>
-      <div class="mb-4">
-        <label for="schedule" class="block text-gray-700">Schedule</label>
-        <input
-          id="schedule"
-          v-model="form.schedule"
-          type="text"
-          placeholder="e.g., 8 AM - 10 AM"
-          class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-          required
-        />
-      </div>
-      <button
-        type="submit"
-        class="bg-blue-500 text-white px-4 py-2 rounded-md mr-4"
-      >
-        Update
-      </button>
-      <router-link
-        to="/teacher/subjects"
-        class="bg-gray-500 text-white px-4 py-2 rounded-md"
-      >
-        Go to Subjects
-      </router-link>
-    </form>
+
+      <form v-else class="form" @submit.prevent="updateSubject">
+        <div>
+          <label class="form-label" for="title">Title</label>
+          <input id="title" v-model="form.title"
+class="form-field"
+type="text"
+autocomplete="off" required />
+        </div>
+
+        <div>
+          <label class="form-label" for="description">Description</label>
+          <textarea id="description" v-model="form.description"
+class="form-field" rows="4"></textarea>
+        </div>
+
+        <div>
+          <label class="form-label" for="schedule">Schedule</label>
+          <input id="schedule" v-model="form.schedule"
+class="form-field"
+type="text"
+placeholder="e.g. 8 AM - 10 AM"
+            required />
+        </div>
+
+        <div class="form-actions">
+          <button class="btn btn-primary" type="submit" :disabled="saving">
+            {{ saving ? "Saving…" : "Save changes" }}
+          </button>
+          <router-link class="btn btn-ghost" to="/teacher/subjects">
+            Cancel
+          </router-link>
+        </div>
+      </form>
+    </div>
   </div>
 </template>
 
@@ -53,6 +58,7 @@
 import axios from "@/axios";
 import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import { apiErrorMessage } from "@/apiError";
 
 export default {
   name: "SubjectEdit",
@@ -60,39 +66,64 @@ export default {
     const form = ref({
       title: "",
       description: "",
-      schedule: "", // Add schedule field
+      schedule: "",
     });
     const route = useRoute();
     const router = useRouter();
     const subjectId = route.params.id;
+    const loading = ref(true);
+    const saving = ref(false);
+    const error = ref("");
 
-    // Fetch subject details and include the schedule field
     const fetchSubject = async () => {
+      loading.value = true;
+      error.value = "";
       try {
         const response = await axios.get(`/teacher/subjects/${subjectId}`);
         form.value = response.data;
-      } catch (error) {
-        console.error("Error fetching subject:", error);
+      } catch (err) {
+        error.value = apiErrorMessage(err, "We couldn't load this subject.");
+      } finally {
+        loading.value = false;
       }
     };
 
     const updateSubject = async () => {
+      saving.value = true;
+      error.value = "";
       try {
-        // Include schedule field when updating subject
         await axios.put(`/teacher/subjects/${subjectId}`, form.value);
         router.push("/teacher/subjects");
-      } catch (error) {
-        console.error("Error updating subject:", error);
+      } catch (err) {
+        error.value = apiErrorMessage(
+          err,
+          "We couldn't save your changes. Please try again.",
+        );
+      } finally {
+        saving.value = false;
       }
     };
 
-    // Fetch subject data when the component is mounted
     onMounted(fetchSubject);
 
     return {
       form,
+      loading,
+      saving,
+      error,
       updateSubject,
     };
   },
 };
 </script>
+
+<style scoped>
+.form__skeleton {
+  display: block;
+  height: 2.75rem;
+}
+
+.form__skeleton--tall {
+  height: 6rem;
+}
+</style>

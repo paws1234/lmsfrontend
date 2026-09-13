@@ -1,47 +1,58 @@
 <template>
-  <div class="p-6 bg-gray-50 min-h-screen flex flex-col items-center">
-    <h2 class="text-3xl font-bold mb-6 text-gray-800">Create Enrollment</h2>
-    <form class="w-full max-w-lg bg-white shadow-lg rounded-lg p-8" @submit.prevent="createEnrollment">
-      <div class="mb-4">
-        <label for="student" class="block text-sm font-medium text-gray-700 mb-2">Student</label>
-        <select v-model="form.student_id"
-          class="block w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
-          @change="updateStudentName">
-          <option disabled value="">Select a student</option>
-          <option v-for="student in students" :key="student.id" :value="student.id">
-            {{ student.name }}
-          </option>
-        </select>
-      </div>
-      <div class="mb-6">
-        <label for="subject" class="block text-sm font-medium text-gray-700 mb-2">Subject</label>
-        <select v-model="form.subject_id"
-          class="block w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
-          @change="updateSubjectTitle">
-          <option disabled value="">Select a subject</option>
-          <option v-for="subject in subjects" :key="subject.id" :value="subject.id">
-            {{ subject.title }}
-          </option>
-        </select>
-      </div>
-      <div class="flex justify-between">
-        <router-link to="/teacher/enrollments">
-          <button type="button"
-            class="px-4 py-2 bg-gray-300 text-gray-800 font-semibold rounded-lg shadow-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50 transition duration-300">
-            Go Back
+  <div class="page">
+    <header class="page__head">
+      <p class="page__eyebrow">Teaching</p>
+      <h1 class="page__title">Enroll a student</h1>
+      <p class="page__lead">
+        Puts one student into one subject. They will then see that subject's
+        tasks, questions and scores.
+      </p>
+    </header>
+
+    <p v-if="error" class="alert alert-error" role="alert">{{ error }}</p>
+
+    <p v-if="notice" class="alert alert-success" role="status">{{ notice }}</p>
+
+    <div class="card card-pad form-narrow">
+      <form class="form" @submit.prevent="createEnrollment">
+        <div>
+          <label class="form-label" for="student">Student</label>
+          <select id="student" v-model="form.student_id" class="form-field" required @change="updateStudentName">
+            <option value="" disabled>Select a student</option>
+            <option v-for="student in students" :key="student.id" :value="student.id">
+              {{ student.name }}
+            </option>
+          </select>
+        </div>
+
+        <div>
+          <label class="form-label" for="subject">Subject</label>
+          <select id="subject" v-model="form.subject_id" class="form-field" required @change="updateSubjectTitle">
+            <option value="" disabled>Select a subject</option>
+            <option v-for="subject in subjects" :key="subject.id" :value="subject.id">
+              {{ subject.title }}
+            </option>
+          </select>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn btn-primary" type="submit" :disabled="saving">
+            {{ saving ? "Enrolling…" : "Enroll student" }}
           </button>
-        </router-link>
-        <button type="submit"
-          class="px-4 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition duration-300">
-          Enroll
-        </button>
-      </div>
-    </form>
+          <router-link class="btn btn-ghost" to="/teacher/enrollments">
+            Cancel
+          </router-link>
+        </div>
+      </form>
+    </div>
   </div>
 </template>
 <script>
 import axios from "@/axios";
+import { apiErrorMessage } from "@/apiError";
+
 export default {
+  name: "EnrollmentForm",
   emits: ["enrollmentCreated"],
   data() {
     return {
@@ -53,6 +64,9 @@ export default {
       subjects: [],
       student_name: "",
       subject_title: "",
+      saving: false,
+      error: "",
+      notice: "",
     };
   },
   created() {
@@ -60,62 +74,71 @@ export default {
     this.fetchSubjects();
   },
   methods: {
-    fetchStudents() {
-      axios
-        .get("/teacher/getStudents")
-        .then((response) => {
-          this.students = response.data;
-        })
-        .catch((error) => {
-          console.error("Error fetching students:", error);
-        });
+    async fetchStudents() {
+      try {
+        const response = await axios.get("/teacher/getStudents");
+        this.students = response.data;
+      } catch (error) {
+        this.error = apiErrorMessage(
+          error,
+          "We couldn't load the student list.",
+        );
+      }
     },
-    fetchSubjects() {
-      axios
-        .get("/teacher/getSubjects")
-        .then((response) => {
-          this.subjects = response.data;
-        })
-        .catch((error) => {
-          console.error("Error fetching subjects:", error);
-        });
+    async fetchSubjects() {
+      try {
+        const response = await axios.get("/teacher/getSubjects");
+        this.subjects = response.data;
+      } catch (error) {
+        this.error = apiErrorMessage(
+          error,
+          "We couldn't load the subject list.",
+        );
+      }
     },
     updateStudentName() {
-      const selectedStudent = this.students.find(
+      const selected = this.students.find(
         (student) => student.id === this.form.student_id,
       );
-      this.student_name = selectedStudent ? selectedStudent.name : "";
+      this.student_name = selected ? selected.name : "";
     },
     updateSubjectTitle() {
-      const selectedSubject = this.subjects.find(
+      const selected = this.subjects.find(
         (subject) => subject.id === this.form.subject_id,
       );
-      this.subject_title = selectedSubject ? selectedSubject.title : "";
+      this.subject_title = selected ? selected.title : "";
     },
-    createEnrollment() {
+    async createEnrollment() {
+    // Both selects are `required`, so this only catches a stale value after
+    // the lists reloaded underneath the form.
       if (!this.student_name || !this.subject_title) {
-        alert("Please select both a student and a subject.");
+        this.error = "Please choose both a student and a subject.";
         return;
       }
-      const enrollmentData = {
-        student_name: this.student_name,
-        subject_name: this.subject_title,
-      };
-      axios
-        .post("/teacher/enrollments", enrollmentData)
-        .then((response) => {
-          alert("Enrollment created successfully");
-          this.form.student_id = "";
-          this.form.subject_id = "";
-          this.student_name = "";
-          this.subject_title = "";
-          this.$emit("enrollmentCreated", response.data);
-        })
-        .catch((error) => {
-          console.error("Error creating enrollment:", error);
+
+      this.saving = true;
+      this.error = "";
+      this.notice = "";
+      try {
+        const response = await axios.post("/teacher/enrollments", {
+          student_name: this.student_name,
+          subject_name: this.subject_title,
         });
+        this.notice = `${this.student_name} is now enrolled in ${this.subject_title}.`;
+        this.form.student_id = "";
+        this.form.subject_id = "";
+        this.student_name = "";
+        this.subject_title = "";
+        this.$emit("enrollmentCreated", response.data);
+      } catch (error) {
+        this.error = apiErrorMessage(
+          error,
+          "We couldn't create that enrollment.",
+        );
+      } finally {
+        this.saving = false;
+      }
     },
   },
 };
 </script>
-<style scoped></style>

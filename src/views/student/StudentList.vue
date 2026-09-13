@@ -1,35 +1,63 @@
 <template>
-    <div class="flex flex-col lg:flex-row">
-        <div class="lg:w-1/4 w-full">
-        </div>
-        <div class="lg:w-3/4 w-full p-4 flex justify-center">
-            <div class="w-full max-w-4xl">
-                <h1 class="text-gray-800">Enrolled Subjects</h1>
-                <div v-if="loading" class="loader">Loading...</div>
-                <div v-else-if="subjects.length === 0" class="no-enrollments">
-                    <p class="text-gray-600">No subjects enrolled yet.</p>
-                </div>
-                <div v-else>
-                    <ul>
-                        <li v-for="subject in subjects" :key="subject.subject_title" class="subject-item">
-                            <h3>{{ subject.subject_title }}</h3>
-                            <p>{{ subject.subject_description }}</p>
-                            <p><strong>Schedule:</strong> {{ subject.subject_schedule }}</p>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </div>
+    <div class="page">
+        <header class="page__head">
+            <p class="page__eyebrow">Student portal</p>
+            <h1 class="page__title">Enrolled subjects</h1>
+            <p class="page__lead">
+                The subjects you are enrolled in, with the schedule your teacher set.
+            </p>
+        </header>
+
+        <p v-if="loading" class="sr-only" role="status">Loading subjects…</p>
+
+        <p v-if="error" class="alert alert-error" role="alert">
+            {{ error }}
+            <button type="button" class="btn btn-ghost alert__action" @click="fetchSubjects">
+                Try again
+            </button>
+        </p>
+
+        <PanelCard v-else title="Your subjects" :loading="loading" :empty="!subjects.length"
+            empty-title="No subjects enrolled yet"
+            empty-text="Your teacher enrolls you into a subject; it then appears here.">
+            <ul class="record-list">
+                <li v-for="subject in subjects" :key="subject.subject_title" class="record">
+                    <div>
+                        <h2 class="record__title">{{ subject.subject_title }}</h2>
+                        <p v-if="subject.subject_description" class="record__meta">
+                            {{ subject.subject_description }}
+                        </p>
+                    </div>
+         
+                    <p v-if="subject.subject_schedule" class="record__facts">
+                        <span class="record__fact">
+                            <span class="record__fact-label">Schedule</span>
+                            {{ subject.subject_schedule }}
+                        </span>
+                    </p>
+                </li>
+            </ul>
+   
+        </PanelCard>
     </div>
 </template>
 <script>
 import axios from "@/axios";
+import { apiErrorMessage } from "@/apiError";
+import PanelCard from "@/components/PanelCard.vue";
+
 export default {
+    name: "StudentEnrolledSubjects",
+    components: { PanelCard },
     data() {
         return {
-            studentId: 1,
-            subjects: [],
-            loading: true,
+        // The endpoint is `/student/{studentId}/subjects`, so it needs an id.
+        // Unchanged from before: sourcing the signed-in student's own id changes
+        // what the page asks the API for, which is not a presentation change.
+        studentId: 1,
+        subjects: [],
+        loading: true,
+        error: "",
         };
     },
     created() {
@@ -37,60 +65,20 @@ export default {
     },
     methods: {
         async fetchSubjects() {
-            try {
-                const response = await axios.get(`/student/${this.studentId}/subjects`);
-                this.subjects = response.data;
-            } catch (error) {
-                console.error("Error fetching subjects:", error);
-            } finally {
-                this.loading = false;
-                console.log(this.subjects)
+          this.loading = true;
+          this.error = "";
+          try {
+              const response = await axios.get(`/student/${this.studentId}/subjects`);
+              this.subjects = response.data;
+          } catch (error) {
+          this.error = apiErrorMessage(
+              error,
+              "We couldn't load your enrolled subjects.",
+          );
+      } finally {
+          this.loading = false;
             }
         },
     },
 };
 </script>
-<style scoped>
-.subject-list {
-    padding: 20px;
-    background-color: var(--surface-muted);
-    border-radius: 8px;
-}
-
-.subject-item {
-    padding: 15px;
-    border: 1px solid var(--border);
-    margin-bottom: 10px;
-    background-color: var(--surface-raised);
-    border-radius: 4px;
-}
-
-.subject-item h3 {
-    margin: 0;
-    font-size: 18px;
-    font-weight: bold;
-}
-
-.subject-item p {
-    font-size: 16px;
-    color: var(--text-muted);
-}
-
-.subject-schedule {
-    margin-top: 10px;
-    font-size: 14px;
-    color: var(--text-muted);
-}
-
-.loader {
-    font-size: 20px;
-    text-align: center;
-    /* Was a fixed #333: on a dark page that is 1.3:1, i.e. invisible. */
-        color: var(--text-muted);
-}
-
-.no-enrollments {
-    text-align: center;
-    color: var(--danger);
-}
-</style>

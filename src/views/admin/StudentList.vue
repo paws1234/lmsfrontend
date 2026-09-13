@@ -1,67 +1,65 @@
 <template>
-  <div class="min-h-screen bg-blue-50 p-6">
-    <header class="mb-6">
-      <h1 class="text-3xl font-bold text-gray-900 mb-4 text-center">
-        Student List
-      </h1>
-      <div
-        v-if="loading"
-        class="flex flex-col items-center justify-center space-y-4"
-      >
-        <div class="loader"></div>
-        <p class="text-blue-600 text-lg font-medium">Loading...</p>
-      </div>
-      <p v-else-if="error" class="text-red-600 text-lg font-medium text-center">
-        Error loading data. Please try again later.
+  <div class="page">
+    <header class="page__head">
+      <p class="page__eyebrow">People</p>
+      <h1 class="page__title">Students</h1>
+      <p class="page__lead">
+        Accounts with access to the student portal. A student appears here as
+        soon as they register or as soon as you add them.
       </p>
-      <p
-        v-if="!students.length && !loading && !error"
-        class="text-gray-600 text-lg font-medium text-center"
-      >
-        No students found.
-      </p>
-      <router-link
-        to="/admin/students/create"
-        class="inline-block bg-blue-600 text-white px-6 py-3 rounded-md shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150"
-      >
-        Create New Student
-      </router-link>
     </header>
-    <div class="bg-blue-100 p-6 rounded-lg shadow-md">
-      <ul class="space-y-4">
-        <li
-          v-for="student in students"
-          :key="student.id"
-          class="flex justify-between items-center p-4 border-b border-gray-200"
-        >
-          <div class="flex-1">
-            <h2 class="text-lg font-semibold text-blue-900">
-              Name: {{ student.name }}
-            </h2>
-            <p class="text-blue-900">Email: {{ student.email }}</p>
+
+    <div class="toolbar">
+      <div class="toolbar__group">
+        <router-link class="btn btn-primary" to="/admin/students/create">
+          New student
+        </router-link>
+      </div>
+    </div>
+
+    <p v-if="loading" class="sr-only" role="status">Loading students…</p>
+
+    <p v-if="notice" class="alert alert-success" role="status">
+      {{ notice }}
+    </p>
+
+    <p v-if="error" class="alert alert-error" role="alert">
+      {{ error }}
+      <button type="button" class="btn btn-ghost alert__action" @click="fetchStudents"
+      >
+        Try again
+      </button>
+    </p>
+
+    <PanelCard v-else title="All students" :loading="loading" :empty="!students.length" empty-title="No students yet"
+      empty-text="Students appear here once they register or are added by an administrator.">
+      <ul class="record-list">
+        <li v-for="student in students" :key="student.id" class="record">
+          <div>
+            <h3 class="record__title">{{ student.name }}</h3>
+            <p class="record__meta">{{ student.email }}</p>
           </div>
-          <div class="ml-4 flex-shrink-0 space-x-4">
+          <div class="record__actions">
             <router-link
               :to="`/admin/students/${student.id}`"
-              class="text-blue-600 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150"
+class="action-link"
             >
-              Update
+              Edit
             </router-link>
             <button
-              class="bg-red-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 transition duration-150"
-              @click="openDeleteModal(student.id)"
+type="button" class="action-link action-link--danger" @click="openDeleteModal(student)"
             >
               Delete
             </button>
           </div>
         </li>
       </ul>
-    </div>
+    </PanelCard>
 
-    <Modal
+    <ModalPopup
       :is-visible="showModal"
-      title="Confirm Deletion"
-      message="Are you sure you want to delete this student? This action cannot be undone."
+tone="danger" title="Delete this student?" confirm-label="Delete"
+      :message="deleteMessage"
       @confirm="handleConfirmDelete"
       @cancel="handleCancelDelete"
     />
@@ -70,20 +68,31 @@
 
 <script>
 import axios from "@/axios";
-import Modal from "@/views/ModalPopup.vue";
+import { apiErrorMessage } from "@/apiError";
+import ModalPopup from "@/views/ModalPopup.vue";
+import PanelCard from "@/components/PanelCard.vue";
 
 export default {
+  name: "AdminStudentList",
   components: {
-    Modal,
+    ModalPopup,
+    PanelCard,
   },
   data() {
     return {
       students: [],
       loading: true,
-      error: false,
+      error: "",
+      notice: "",
       showModal: false,
       studentToDelete: null,
     };
+  },
+  computed: {
+    deleteMessage() {
+      const name = this.studentToDelete ? this.studentToDelete.name : "";
+      return `${name} and their enrolments will be removed. This cannot be undone.`;
+    },
   },
   mounted() {
     this.fetchStudents();
@@ -91,56 +100,46 @@ export default {
   methods: {
     async fetchStudents() {
       this.loading = true;
-      this.error = false;
+      this.error = "";
       try {
         const response = await axios.get("/admin/students");
         this.students = response.data.students;
       } catch (error) {
-        this.error = true;
+        this.error = apiErrorMessage(
+          error,
+          "We couldn't load the student list.",
+        );
       } finally {
         this.loading = false;
       }
     },
 
-    openDeleteModal(id) {
-      this.studentToDelete = id;
+    openDeleteModal(student) {
+      this.studentToDelete = student;
       this.showModal = true;
-    },
-
-    async handleConfirmDelete() {
-      try {
-        await axios.delete(`/admin/students/${this.studentToDelete}`);
-        this.fetchStudents();
-        this.showModal = false;
-      } catch (error) {
-        this.error = true;
-        this.showModal = false;
-      }
     },
 
     handleCancelDelete() {
       this.showModal = false;
+      this.studentToDelete = null;
+    },
+
+    async handleConfirmDelete() {
+      const student = this.studentToDelete;
+      this.showModal = false;
+      this.studentToDelete = null;
+      if (!student) return;
+      this.notice = "";
+      this.error = "";
+      try {
+        await axios.delete(`/admin/students/${student.id}`);
+        this.students = this.students.filter((item) => item.id !== student.id);
+        this.notice = `${student.name} was deleted.`;
+      } catch (error) {
+        this.error = apiErrorMessage(error, "We couldn't delete that student.");
+      }
     },
   },
 };
 </script>
 
-<style scoped>
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-.loader {
-  border: 8px solid #f3f3f3;
-  border-top: 8px solid #3498db;
-  border-radius: 50%;
-  width: 80px;
-  height: 80px;
-  animation: spin 1.5s linear infinite;
-}
-</style>

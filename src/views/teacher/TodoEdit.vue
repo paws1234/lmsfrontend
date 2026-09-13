@@ -1,153 +1,222 @@
 <template>
-  <div class="p-6 bg-gray-100 min-h-screen">
-    <h2 class="text-2xl font-bold mb-4">Edit TODO</h2>
-    <form @submit.prevent="updateTodo">
-      <div class="mb-4">
-        <label class="block mb-2 text-gray-700">Subject</label>
-        <select v-model="todo.subject" class="p-2 border border-gray-300 rounded-md w-full">
-          <option disabled value="">Select a subject</option>
-          <option v-for="subject in subjects" :key="subject.id" :value="subject.id">
-            {{ subject.title }}
-          </option>
-        </select>
+  <div class="page">
+    <header class="page__head">
+      <p class="page__eyebrow">Teaching</p>
+      <h1 class="page__title">Edit TODO</h1>
+      <p class="page__lead">
+        Students see these changes the next time they open their Tasks page.
+      </p>
+    </header>
+
+    <p v-if="error" class="alert alert-error" role="alert">{{ error }}</p>
+
+    <div class="card card-pad form-narrow">
+      <div v-if="loading" class="form" aria-hidden="true">
+        <span class="skeleton form__skeleton"></span>
+        <span class="skeleton form__skeleton form__skeleton--tall"></span>
+        <p class="sr-only" role="status">Loading TODO…</p>
       </div>
-      <div class="mb-4">
-        <label class="block mb-2 text-gray-700">Type</label>
-        <select v-model="todo.type" class="p-2 border border-gray-300 rounded-md w-full">
-          <option value="personal">Personal</option>
-          <option value="work">Work</option>
-          <option value="other">Other</option>
-        </select>
-      </div>
-      <div class="mb-4">
-        <label class="block mb-2 text-gray-700">Title</label>
-        <input v-model="todo.title" type="text" placeholder="Enter title"
-          class="p-2 border border-gray-300 rounded-md w-full" />
-      </div>
-      <div class="mb-4">
-        <label class="block mb-2 text-gray-700">Description</label>
-        <textarea v-model="todo.description" placeholder="Enter description"
-          class="p-2 border border-gray-300 rounded-md w-full"></textarea>
-      </div>
-      <div class="mb-4">
-        <input type="file" class="p-2 border border-gray-300 rounded-md" @change="handleFileUpload" />
-      </div>
-      <button type="submit"
-        class="px-4 py-2 bg-blue-500 text-white font-semibold rounded hover:bg-blue-600 transition duration-300">
-        Update TODO
-      </button>
-    </form>
+
+      <form v-else class="form" @submit.prevent="updateTodo">
+        <div class="form-grid form-grid--2">
+          <div>
+            <label class="form-label" for="subject">Subject</label>
+            <select id="subject" v-model="todo.subject" class="form-field" required>
+              <option value="" disabled>Select a subject</option>
+              <option v-for="subject in subjects" :key="subject.id" :value="subject.id">
+                {{ subject.title }}
+              </option>
+            </select>
+          </div>
+
+          <div>
+            <label class="form-label" for="type">Type</label>
+            <select id="type" v-model="todo.type" class="form-field">
+              <option value="personal">Personal</option>
+              <option value="work">Work</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="form-label" for="title">Title</label>
+          <input id="title" v-model="todo.title" class="form-field" type="text" required />
+        </div>
+
+        <div>
+          <label class="form-label" for="description">Description</label>
+          <textarea id="description" v-model="todo.description" class="form-field" rows="5"></textarea>
+        </div>
+
+        <div>
+          <label class="form-label" for="attachment">Replace attachment</label>
+          <input id="attachment" class="form-field" type="file" aria-describedby="attachment-status"
+            @change="handleFileUpload" />
+          <p id="attachment-status" class="form-help" :class="{ 'form-error': uploadError }" role="status">
+            <template v-if="uploading">Uploading…</template>
+            <template v-else-if="uploadError">{{ uploadError }}</template>
+            <template v-else-if="todo.fileUrl">
+              New file ready — it replaces the current attachment when you save.
+            </template>
+            <template v-else-if="existingFileUrl">
+              Current attachment:
+              <a :href="existingFileUrl" class="action-link" target="_blank" rel="noopener">
+                open it
+              </a>
+            </template>
+            <template v-else>There is no attachment yet.</template>
+          </p>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn btn-primary" type="submit" :disabled="saving || uploading">
+            {{ saving ? "Saving…" : "Save changes" }}
+          </button>
+          <router-link class="btn btn-ghost" to="/teacher/todos">
+            Cancel
+          </router-link>
+        </div>
+      </form>
+    </div>
   </div>
 </template>
 <script>
 import axios from "@/axios";
 import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
-const BASE_CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/djwydarmv';
-const UPLOAD_PRESET = 'pawscloudinary';
+import { apiErrorMessage } from "@/apiError";
+import { uploadAttachment } from "@/cloudinary";
+
 export default {
+  name: "TodoEdit",
   setup() {
     const route = useRoute();
     const router = useRouter();
     const todo = ref({
-      subject: '',
-      type: '',
-      title: '',
-      description: '',
-      file: null,
-      fileUrl: ''
+      subject: "",
+      type: "",
+      title: "",
+      description: "",
+      fileUrl: "",
     });
     const subjects = ref([]);
-    const getResourceType = (file) => {
-      const fileType = file.type;
-      return fileType.startsWith('image/') ? 'image' : fileType.startsWith('video/') ? 'video' : 'raw';
-    };
+    /* The attachment already saved on the server, which the form does not
+       overwrite unless a new file is chosen. */
+    const existingFileUrl = ref("");
+    const loading = ref(true);
+    const saving = ref(false);
+    const uploading = ref(false);
+    const error = ref("");
+    const uploadError = ref("");
+
     const handleFileUpload = async (event) => {
       const file = event.target.files[0];
-      if (file) {
-        todo.value.file = file;
-        try {
-          const resourceType = getResourceType(file);
-          const cloudinaryUrl = `${BASE_CLOUDINARY_URL}/${resourceType}/upload`;
-          const url = await uploadToCloudinary(file, cloudinaryUrl);
-          todo.value.fileUrl = url;
-        } catch (error) {
-          console.error('Error uploading file:', error);
-        }
+      if (!file) return;
+
+      uploading.value = true;
+      uploadError.value = "";
+      try {
+        todo.value.fileUrl = await uploadAttachment(file);
+      } catch (err) {
+        todo.value.fileUrl = "";
+        uploadError.value =
+          "We couldn't upload that file. The existing attachment is unchanged.";
+      } finally {
+        uploading.value = false;
       }
     };
-    const uploadToCloudinary = async (file, cloudinaryUrl) => {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('upload_preset', UPLOAD_PRESET);
-      const response = await fetch(cloudinaryUrl, {
-        method: 'POST',
-        body: formData
-      });
-      if (!response.ok) {
-        throw new Error(`Failed to upload ${file.type}`);
-      }
-      const data = await response.json();
-      return data.secure_url;
-    };
+
     const updateTodo = async () => {
+      saving.value = true;
+      error.value = "";
       try {
         const formData = new FormData();
-        formData.append('subject_id', todo.value.subject);
-        formData.append('type', todo.value.type);
-        formData.append('title', todo.value.title);
-        formData.append('description', todo.value.description);
+        formData.append("subject_id", todo.value.subject);
+        formData.append("type", todo.value.type);
+        formData.append("title", todo.value.title);
+        formData.append("description", todo.value.description);
         if (todo.value.fileUrl) {
-          formData.append('fileUrl', todo.value.fileUrl);
+          formData.append("fileUrl", todo.value.fileUrl);
         }
-        const response = await axios.put(`/teacher/todos/${route.params.id}`, formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
+        await axios.put(`/teacher/todos/${route.params.id}`, formData, {
+          headers: { "Content-Type": "multipart/form-data" },
         });
-        console.log('Todo updated successfully:', response.data);
-        router.push('/teacher/todos');
-      } catch (error) {
-        console.error(
-          'Error updating todo:',
-          error.response ? error.response.data : error.message,
+        router.push("/teacher/todos");
+      } catch (err) {
+        error.value = apiErrorMessage(
+          err,
+          "We couldn't save your changes. Please try again.",
+        );
+      } finally {
+        saving.value = false;
+      }
+    };
+
+    const fetchSubjects = async () => {
+      try {
+        const response = await axios.get("/teacher/getSubjects");
+        subjects.value = response.data;
+      } catch (err) {
+        error.value = apiErrorMessage(
+          err,
+          "We couldn't load your subjects, so the subject list is empty.",
         );
       }
     };
-    const fetchSubjects = async () => {
-      try {
-        const response = await axios.get('/teacher/getSubjects');
-        subjects.value = response.data;
-      } catch (error) {
-        console.error('Error fetching subjects:', error);
-      }
-    };
+
     const fetchTodo = async () => {
       try {
         const response = await axios.get(`/teacher/todos/${route.params.id}`);
-        const todoData = response.data;
+        const data = response.data;
+        /* The form's `fileUrl` starts empty on purpose: it doubles as "a new
+           file was chosen", and the API only replaces the attachment when it
+           is present. The current attachment is shown from the loaded value. */
         todo.value = {
-          subject: todoData.subject_id,
-          type: todoData.type,
-          title: todoData.title,
-          description: todoData.description,
-          fileUrl: todoData.fileUrl
+          subject: data.subject_id,
+          type: data.type,
+          title: data.title,
+          description: data.description,
+          fileUrl: "",
         };
-      } catch (error) {
-        console.error("Error fetching todo:", error);
+        existingFileUrl.value = data.fileUrl || "";
+      } catch (err) {
+        error.value = apiErrorMessage(err, "We couldn't load this TODO.");
+      } finally {
+        loading.value = false;
       }
     };
-    onMounted(() => {
-      fetchSubjects();
-      fetchTodo();
+
+    onMounted(async () => {
+      await Promise.all([fetchSubjects(), fetchTodo()]);
     });
+
     return {
       todo,
       subjects,
+      existingFileUrl,
+      loading,
+      saving,
+      uploading,
+      error,
+      uploadError,
       handleFileUpload,
       updateTodo,
     };
   },
 };
 </script>
-<style scoped></style>
+<style scoped>
+.form__skeleton {
+  display: block;
+  height: 2.75rem;
+}
+
+.form__skeleton--tall {
+  height: 5rem;
+}
+
+input[type="file"].form-field {
+  padding: var(--space-2) var(--space-3);
+}
+</style>

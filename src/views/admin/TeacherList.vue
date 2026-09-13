@@ -1,75 +1,63 @@
 <template>
-  <div class="min-h-screen bg-blue-50 p-6">
-    <header class="mb-6">
-      <h1 class="text-3xl font-bold text-gray-900 mb-2 text-center">
-        Teacher List
-      </h1>
-      <div v-if="loading" class="flex justify-center items-center space-x-2">
-        <svg
-          class="w-6 h-6 text-blue-600 animate-spin"
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M4 12a8 8 0 1 1 8 8A8 8 0 0 1 4 12z"
-          ></path>
-        </svg>
-        <p class="text-blue-600">Loading...</p>
-      </div>
-      <p v-else-if="error" class="text-red-600">
-        Error loading data. Please try again later.
+  <div class="page">
+    <header class="page__head">
+      <p class="page__eyebrow">People</p>
+      <h1 class="page__title">Teachers</h1>
+      <p class="page__lead">
+        Accounts that can create subjects, tasks and forms for their students.
       </p>
-      <p v-if="!teachers.length && !loading && !error" class="text-gray-600 text-lg font-medium text-center">
-        No teachers found.
-      </p>
-      <router-link
-        to="/admin/teachers/create"
-        class="inline-block bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-      >
-        Create New Teacher
-      </router-link>
     </header>
 
-    <div class="bg-blue-100 p-6 rounded-lg shadow-md">
-      <ul class="space-y-4">
-        <li
-          v-for="teacher in teachers"
-          :key="teacher.id"
-          class="flex justify-between items-center p-4 border-b border-gray-200"
-        >
-          <div class="flex-1">
-            <h2 class="text-lg font-semibold text-gray-800">
-              Name: {{ teacher.name }}
-            </h2>
-            <p class="text-gray-600">Email: {{ teacher.email }}</p>
+    <div class="toolbar">
+      <div class="toolbar__group">
+        <router-link class="btn btn-primary" to="/admin/teachers/create">
+          New teacher
+        </router-link>
+      </div>
+    </div>
+
+    <p v-if="loading" class="sr-only" role="status">Loading teachers…</p>
+
+    <p v-if="notice" class="alert alert-success" role="status">
+      {{ notice }}
+    </p>
+
+    <p v-if="error" class="alert alert-error" role="alert">
+      {{ error }}
+      <button type="button" class="btn btn-ghost alert__action" @click="fetchTeachers">
+        Try again
+      </button>
+    </p>
+
+    <PanelCard v-else title="All teachers" :loading="loading" :empty="!teachers.length" empty-title="No teachers yet"
+      empty-text="Add a teacher so subjects and schedules can be assigned to them.">
+      <ul class="record-list">
+        <li v-for="teacher in teachers" :key="teacher.id" class="record">
+          <div>
+            <h3 class="record__title">{{ teacher.name }}</h3>
+            <p class="record__meta">{{ teacher.email }}</p>
           </div>
-          <div class="ml-4 flex-shrink-0">
+          <div class="record__actions">
             <router-link
               :to="`/admin/teachers/${teacher.id}`"
-              class="text-blue-600 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+class="action-link"
             >
-              Update
+              Edit
             </router-link>
             <button
-              class="ml-4 bg-red-600 text-white px-3 py-1 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
-              @click="confirmDelete(teacher.id)"
+type="button" class="action-link action-link--danger" @click="confirmDelete(teacher)"
             >
               Delete
             </button>
           </div>
         </li>
       </ul>
-    </div>
+    </PanelCard>
 
-    <ConfirmationModal
+    <ModalPopup
       :is-visible="isModalVisible"
-      title="Confirm Deletion"
-      message="Are you sure you want to delete this teacher?"
+tone="danger" title="Delete this teacher?" confirm-label="Delete"
+      :message="deleteMessage"
       @confirm="deleteTeacher"
       @cancel="cancelDelete"
     />
@@ -78,20 +66,31 @@
 
 <script>
 import axios from "@/axios";
+import { apiErrorMessage } from "@/apiError";
+import ModalPopup from "@/views/ModalPopup.vue";
+import PanelCard from "@/components/PanelCard.vue";
 
-import ConfirmationModal from "@/views/ModalPopup.vue";
 export default {
+  name: "AdminTeacherList",
   components: {
-    ConfirmationModal,
+    ModalPopup,
+    PanelCard,
   },
   data() {
     return {
       teachers: [],
       loading: true,
-      error: false,
+      error: "",
+      notice: "",
       isModalVisible: false,
       teacherToDelete: null,
     };
+  },
+  computed: {
+    deleteMessage() {
+      const name = this.teacherToDelete ? this.teacherToDelete.name : "";
+      return `${name} will lose access, and their subjects will be left without a teacher. This cannot be undone.`;
+    },
   },
   mounted() {
     this.fetchTeachers();
@@ -99,56 +98,46 @@ export default {
   methods: {
     async fetchTeachers() {
       this.loading = true;
-      this.error = false;
+      this.error = "";
       try {
         const response = await axios.get("/admin/teachers");
         this.teachers = response.data.teachers;
       } catch (error) {
-        console.error("Error fetching teachers:", error);
-        this.error = true;
+        this.error = apiErrorMessage(
+          error,
+          "We couldn't load the teacher list.",
+        );
       } finally {
         this.loading = false;
       }
     },
 
-    confirmDelete(id) {
-      this.teacherToDelete = id;
+    confirmDelete(teacher) {
+      this.teacherToDelete = teacher;
       this.isModalVisible = true;
-    },
-
-    async deleteTeacher() {
-      if (this.teacherToDelete) {
-        try {
-          await axios.delete(`/admin/teachers/${this.teacherToDelete}`);
-          this.fetchTeachers();
-        } catch (error) {
-          console.error("Error deleting teacher:", error);
-        } finally {
-          this.isModalVisible = false;
-          this.teacherToDelete = null;
-        }
-      }
     },
 
     cancelDelete() {
       this.isModalVisible = false;
       this.teacherToDelete = null;
     },
+
+    async deleteTeacher() {
+      const teacher = this.teacherToDelete;
+      this.isModalVisible = false;
+      this.teacherToDelete = null;
+      if (!teacher) return;
+      this.notice = "";
+      this.error = "";
+      try {
+        await axios.delete(`/admin/teachers/${teacher.id}`);
+        this.teachers = this.teachers.filter((item) => item.id !== teacher.id);
+        this.notice = `${teacher.name} was deleted.`;
+      } catch (error) {
+        this.error = apiErrorMessage(error, "We couldn't delete that teacher.");
+      }
+    },
   },
 };
 </script>
 
-<style scoped>
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-.animate-spin {
-  animation: spin 1s linear infinite;
-}
-</style>

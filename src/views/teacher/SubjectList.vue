@@ -1,115 +1,176 @@
 <template>
-  <div class="min-h-screen bg-gray-100 p-6">
-    <header class="mb-6 flex justify-between items-center">
-      <h2 class="text-3xl font-bold text-gray-900">Subjects</h2>
-      <router-link
-        to="/teacher/subjects/create"
-        class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-      >
-        Create New Subject
-      </router-link>
+  <div class="page">
+    <header class="page__head">
+      <p class="page__eyebrow">Teaching</p>
+      <h1 class="page__title">Subjects</h1>
+      <p class="page__lead">
+        The subjects you handle, with their schedule. Students enrolled in a
+        subject see its tasks and questions.
+      </p>
     </header>
 
-    <div class="mb-4 flex justify-between items-center">
-      <input
-        v-model="searchQuery"
-        type="text"
-        placeholder="Search subjects..."
-        class="p-2 border border-gray-300 rounded-md w-full max-w-md"
-      />
-    </div>
-
-    <div v-if="loading" class="flex justify-center items-center h-64">
-      <div class="loader"></div>
-    </div>
-
-    <div v-else>
-      <div
-        v-if="filteredSubjects.length === 0"
-        class="text-gray-500 text-center"
-      >
-        No subjects available.
+    <div class="toolbar">
+      <div class="toolbar__group">
+        <label class="sr-only" for="subject-search">Search subjects</label>
+        <input
+id="subject-search"
+v-model="searchQuery"
+class="form-field search" type="search"
+          placeholder="Search by title, description or schedule" />
       </div>
-      <table
-        v-else
-        class="w-full bg-white rounded-lg shadow-md border border-gray-200"
-      >
-        <thead>
-          <tr class="bg-gray-200 text-gray-700">
-            <th class="p-4 text-left">Title</th>
-            <th class="p-4 text-left">Description</th>
-            <th class="p-4 text-left">Schedule</th> <!-- Added Schedule Column -->
-            <th class="p-4 text-center">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="subject in filteredSubjects" :key="subject.id">
-            <td class="p-4">{{ subject.title }}</td>
-            <td class="p-4">{{ subject.description }}</td>
-            <td class="p-4">{{ subject.schedule }}</td> <!-- Display the Schedule -->
-            <td class="p-4 text-center">
-              <router-link
-                :to="{ name: 'SubjectEdit', params: { id: subject.id } }"
-                class="text-blue-500 hover:underline"
-              >
-                Edit
-              </router-link>
-              <button
-                class="ml-4 text-red-500 hover:underline"
-                @click="deleteSubject(subject.id)"
-              >
-                Delete
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="toolbar__group">
+        <router-link class="btn btn-primary" to="/teacher/subjects/create">
+          New subject
+        </router-link>
+      </div>
     </div>
+
+    <p v-if="notice" class="alert alert-success" role="status">
+      {{ notice }}
+    </p>
+
+    <p v-if="loadError" class="alert alert-error" role="alert">
+      {{ loadError }}
+      <button type="button" class="btn btn-ghost alert__action" @click="fetchSubjects"
+      >
+        Try again
+      </button>
+    </p>
+
+    <p v-if="actionError" class="alert alert-error" role="alert">
+      {{ actionError }}
+    </p>
+
+    <PanelCard v-if="!loadError" title="Your subjects" :loading="loading" :empty="!filteredSubjects.length"
+      :empty-title="hasSubjects ? 'No subjects match your search' : 'No subjects yet'
+        " :empty-text="hasSubjects
+          ? 'Try a different word, or clear the search box.'
+          : 'Create a subject, then enrol students into it.'
+        ">
+      <div class="table-wrap">
+        <table class="table subject-table">
+          <thead>
+            <tr>
+              <th scope="col">Title</th>
+              <th scope="col">Description</th>
+              <th scope="col">Schedule</th>
+              <th scope="col">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="subject in filteredSubjects" :key="subject.id">
+              <td>
+                <span class="subject-table__title">{{ subject.title }}</span>
+              </td>
+              <td>{{ subject.description || "—" }}</td>
+              <td>
+                <span v-if="subject.schedule" class="badge">{{
+                  subject.schedule
+                  }}</span>
+                <span v-else>—</span>
+              </td>
+              <td>
+                <router-link :to="{ name: 'SubjectEdit', params: { id: subject.id } }"
+class="action-link">
+                  Edit
+                </router-link>
+                <button
+type="button" class="action-link action-link--danger" @click="askDelete(subject)">
+                  Delete
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </PanelCard>
+
+    <ModalPopup :is-visible="showModal" tone="danger" title="Delete this subject?" confirm-label="Delete"
+      :message="deleteMessage" @confirm="confirmDelete" @cancel="cancelDelete" />
   </div>
 </template>
 
 <script>
 import axios from "@/axios";
 import { ref, onMounted, computed } from "vue";
+import { apiErrorMessage } from "@/apiError";
+import PanelCard from "@/components/PanelCard.vue";
+import ModalPopup from "@/views/ModalPopup.vue";
+
+/** Lower-cased haystack for one subject; a null field must not throw. */
+const haystack = (subject) =>
+  [subject.title, subject.description, subject.schedule]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
 
 export default {
   name: "SubjectList",
+  components: { PanelCard, ModalPopup },
   setup() {
     const subjects = ref([]);
     const loading = ref(true);
     const searchQuery = ref("");
+    const loadError = ref("");
+    const actionError = ref("");
+    const notice = ref("");
+    const showModal = ref(false);
+    const subjectToDelete = ref(null);
 
     const fetchSubjects = async () => {
+      loading.value = true;
+      loadError.value = "";
       try {
         const response = await axios.get("/teacher/subjects");
         subjects.value = response.data;
       } catch (error) {
-        console.error("Error fetching subjects:", error);
+        loadError.value = apiErrorMessage(
+          error,
+          "We couldn't load your subjects.",
+        );
       } finally {
         loading.value = false;
       }
     };
 
-    const deleteSubject = async (id) => {
-      if (confirm("Are you sure you want to delete this subject?")) {
-        try {
-          await axios.delete(`/teacher/subjects/${id}`);
-          fetchSubjects();
-        } catch (error) {
-          console.error("Error deleting subject:", error);
-        }
+    const askDelete = (subject) => {
+      subjectToDelete.value = subject;
+      showModal.value = true;
+    };
+
+    const cancelDelete = () => {
+      showModal.value = false;
+      subjectToDelete.value = null;
+    };
+
+    const confirmDelete = async () => {
+      const subject = subjectToDelete.value;
+      showModal.value = false;
+      subjectToDelete.value = null;
+      if (!subject) return;
+      notice.value = "";
+      actionError.value = "";
+      try {
+        await axios.delete(`/teacher/subjects/${subject.id}`);
+        subjects.value = subjects.value.filter((s) => s.id !== subject.id);
+        notice.value = `“${subject.title}” was deleted.`;
+      } catch (error) {
+        actionError.value = apiErrorMessage(
+          error,
+          "We couldn't delete that subject.",
+        );
       }
     };
 
     const filteredSubjects = computed(() => {
-      const query = searchQuery.value.toLowerCase();
-      return subjects.value.filter(
-        (subject) =>
-          subject.title.toLowerCase().includes(query) ||
-          subject.description.toLowerCase().includes(query) ||
-          (subject.schedule && subject.schedule.toLowerCase().includes(query)) // Filter by schedule as well
+      const query = searchQuery.value.trim().toLowerCase();
+      if (!query) return subjects.value;
+      return subjects.value.filter((subject) =>
+        haystack(subject).includes(query),
       );
     });
+
+    const hasSubjects = computed(() => subjects.value.length > 0);
 
     onMounted(fetchSubjects);
 
@@ -117,9 +178,38 @@ export default {
       subjects,
       loading,
       searchQuery,
-      deleteSubject,
+      loadError,
+      actionError,
+      notice,
+      showModal,
+      subjectToDelete,
+      askDelete,
+      cancelDelete,
+      confirmDelete,
       filteredSubjects,
+      hasSubjects,
+      fetchSubjects,
     };
+  },
+  computed: {
+    deleteMessage() {
+      const s = this.subjectToDelete;
+      if (!s) return "This cannot be undone.";
+      return `“${s.title}”, its tasks and its questions will be removed. This cannot be undone.`;
+    },
   },
 };
 </script>
+
+<style scoped>
+/* Below this the four columns stop being readable, so the wrapper scrolls
+   instead of the whole page. */
+.subject-table {
+  min-width: 40rem;
+}
+
+.subject-table__title {
+  font-weight: 600;
+  color: var(--text);
+}
+</style>

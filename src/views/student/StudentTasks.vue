@@ -1,280 +1,482 @@
-
 <template>
+  <div class="page">
+    <header class="page__head">
+      <p class="page__eyebrow">Student portal</p>
+      <h1 class="page__title">Your tasks</h1>
+      <p class="page__lead">
+        Work set by your teachers, grouped by subject and the day it was posted.
+        Answer the questions for a day in one go.
+      </p>
+    </header>
 
-  <div class="flex">
-    <div class="p-6 space-y-6 flex-1 lg:ml-64">
-      <h2 class="text-2xl font-semibold text-gray-800">Your Tasks</h2>
-      <div class="flex space-x-4">
-        <button @click="toggleView('todos')"
-          :class="{ 'bg-blue-500 text-white': activeView === 'todos', 'bg-gray-200': activeView !== 'todos' }"
-          class="py-2 px-4 rounded-md hover:bg-blue-400 transition duration-300">
+    <p v-if="loadError" class="alert alert-error" role="alert">
+      {{ loadError }}
+      <button
+        type="button"
+        class="btn btn-ghost alert__action"
+        @click="fetchTasks"
+      >
+        Try again
+      </button>
+    </p>
+
+    <div v-else-if="loading" class="card card-pad stack" aria-hidden="true">
+      <span class="skeleton task-skeleton"></span>
+      <span class="skeleton task-skeleton"></span>
+      <p class="sr-only" role="status">Loading your tasks…</p>
+    </div>
+
+    <template v-else>
+      <div class="tabs" role="tablist" aria-label="Your work">
+        <button
+          id="tab-todos"
+          type="button"
+          role="tab"
+          class="tabs__tab"
+          :aria-selected="activeView === 'todos' ? 'true' : 'false'"
+          aria-controls="panel-todos"
+          @click="toggleView('todos')"
+        >
           Tasks
         </button>
-        <button @click="toggleView('questions')"
-          :class="{ 'bg-blue-500 text-white': activeView === 'questions', 'bg-gray-200': activeView !== 'questions' }"
-          class="py-2 px-4 rounded-md hover:bg-blue-400 transition duration-300">
+        <button
+          id="tab-questions"
+          type="button"
+          role="tab"
+          class="tabs__tab"
+          :aria-selected="activeView === 'questions' ? 'true' : 'false'"
+          aria-controls="panel-questions"
+          @click="toggleView('questions')"
+        >
           Questions
         </button>
       </div>
-      <div v-if="activeView === 'todos'" class="space-y-6">
-        <h3 class="text-xl font-medium text-gray-800">Tasks</h3>
-        <p class="text-gray-600">Here are your pending tasks. Follow the instructions and check any attachments for
-          additional resources.</p>
-        <div v-for="(subjectTodos, subjectId) in groupedTodosByDate" :key="subjectId" class="space-y-6">
-          <h4 class="text-lg font-semibold">Subject: {{ subjectTodos[0]?.subject_title }}</h4>
-          <div v-for="(todoGroup, date) in subjectTodos[0]?.groupedTodos" :key="date">
-            <h5 class="font-semibold text-gray-800 mt-4">Date: {{ date }}</h5>
-            <div v-for="(todo, index) in todoGroup" :key="index" class="bg-white p-4 rounded-md shadow-md">
-              <h4 class="font-semibold text-lg">Title: {{ todo.title }}</h4>
-              <p class="text-gray-700">Instructions: {{ todo.description }}</p>
-              <div v-if="todo.file" class="mt-4">
-                <h5 class="font-medium text-gray-800">Attached File:</h5>
-                <div v-if="isImage(todo.file)" class="space-y-2">
-                  <img :src="todo.file" alt="Attachment Preview" class="max-w-full h-auto rounded-md shadow-md" />
-                </div>
-                <div v-if="isPDF(todo.file)" class="space-y-2">
-                  <iframe :src="todo.file" class="w-full h-96 border-none rounded-md shadow-md"></iframe>
-                </div>
-                <div v-if="isTextFile(todo.file)" class="space-y-2">
-                  <iframe :src="todo.file" class="w-full h-96 border-none rounded-md shadow-md"></iframe>
-                </div>
-                <div v-if="!isImage(todo.file) && !isPDF(todo.file) && !isTextFile(todo.file)" class="space-y-2">
-                  <button @click="downloadFile(todo.file)" class="text-blue-500 hover:text-blue-700 cursor-pointer">
-                    Download File
+
+      <section
+        v-show="activeView === 'todos'"
+        id="panel-todos"
+        role="tabpanel"
+        aria-labelledby="tab-todos"
+        class="stack"
+      >
+        <div v-if="!todoGroups.length" class="empty-state">
+          <p class="empty-state-title">No tasks yet</p>
+          <p>Tasks your teachers set for your subjects appear here.</p>
+        </div>
+
+        <PanelCard
+          v-for="group in todoGroups"
+          :key="group.subjectId"
+          :title="group.subjectTitle"
+        >
+          <div v-for="day in group.dates" :key="day.date" class="day">
+            <h3 class="day__date">Posted {{ day.date }}</h3>
+            <ul class="task-list">
+              <li v-for="todo in day.items" :key="todo.id" class="task">
+                <h4 class="task__title">{{ todo.title }}</h4>
+                <p v-if="todo.description" class="record__meta">
+                  {{ todo.description }}
+                </p>
+
+                <div v-if="todo.file" class="task__attachment">
+                  <img
+                    v-if="isImage(todo.file)"
+                    :src="todo.file"
+                    alt="Attachment preview"
+                    class="task__image"
+                  />
+                  <iframe
+                    v-else-if="isPDF(todo.file) || isTextFile(todo.file)"
+                    :src="todo.file"
+                    title="Attachment"
+                    class="task__frame"
+                  ></iframe>
+                  <button
+                    v-else
+                    type="button"
+                    class="btn btn-ghost"
+                    @click="downloadFile(todo.file)"
+                  >
+                    Download attachment
                   </button>
                 </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div v-if="activeView === 'questions'" class="space-y-6">
-        <h3 class="text-xl font-medium text-gray-800">Questions</h3>
-     
-  <p class="text-gray-600">
-    Here are the questions you need to answer. Make sure to read through the provided answers and notes.
-  </p>
-  <div v-for="(subjectQuestions, subjectId) in groupedQuestionsByDate" :key="subjectId" class="space-y-6">
-    <h4 class="text-lg font-semibold">Subject: {{ subjectQuestions[0]?.subject_title }}</h4>
-    <button @click="toggleSubjectVisibility(subjectId)">
-      {{ subjectVisibility[subjectId] ? 'Hide' : 'Show' }} Questions
-    </button>
-    <div v-if="subjectVisibility[subjectId]">
-      <div v-for="(questionGroup, date) in subjectQuestions[0]?.groupedQuestions" :key="date">
-        <h5 class="font-semibold text-gray-800 mt-4">Date: {{ date }}</h5>
-        <div v-for="(question, index) in questionGroup" :key="index" class="bg-white p-4 rounded-md shadow-md">
-          <h4 class="font-semibold text-lg" :data-question-id="question.question_id" :data-form-map-id="question.form_map_id">
-            Question: {{ question.question_text }}
-          </h4>
-          <p class="text-gray-700">Points: {{ question.points }}</p>
-          <div v-if="question.answers && question.answers.length > 0">
-            <ul class="list-disc pl-6">
-              <p class="text-gray-700">Answers:</p>
-              <li 
-                v-for="(answer, idx) in question.answers" 
-                :key="idx"
-                :data-answer-id="answer.id"
-              >
-                {{ answer.answer_text }}
               </li>
             </ul>
           </div>
-          <!-- Only show the 'Select Answer' button once per date -->
-          <div v-if="!selectedDateHasButton[date]">
-            <button @click="openAnswerModal(questionGroup, question.form_map_id, date)" class="text-blue-500 hover:text-blue-700">
-              Select Answer
-            </button>
-            <!-- Mark the date as having the button displayed -->
-            <span :data-date="date" @click="markDateAsShown(date)" class="hidden"></span>
-          </div>
+        </PanelCard>
+      </section>
+
+      <section
+        v-show="activeView === 'questions'"
+        id="panel-questions"
+        role="tabpanel"
+        aria-labelledby="tab-questions"
+        class="stack"
+      >
+        <div v-if="!questionGroups.length" class="empty-state">
+          <p class="empty-state-title">No questions yet</p>
+          <p>Forms your teachers publish for your subjects appear here.</p>
         </div>
-      </div>
-    </div>
-  </div>
-</div>
 
-
-<!-- Modal for Answering Questions -->
-<div v-if="isModalOpen" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center">
-        <div class="bg-white p-6 rounded-lg shadow-lg w-1/3 text-gray-800">
-     
-    <h3 class="text-2xl font-semibold mb-4">Submit Your Answer</h3>
-    <form @submit.prevent="submitAnswers">
-      <div v-for="(question, index) in modalQuestions" :key="index" class="mb-4">
-        <label class="block text-lg font-medium" :data-question-id="question.question_id">
-          {{ question.question_text }}
-        </label>
-        <div class="mt-2 space-y-2">
-          <div v-for="(answer, answerIndex) in question.answers" :key="answerIndex">
-            <label class="flex items-center">
-              <input 
-                type="radio" 
-                :name="'answer_' + index" 
-                v-model="selectedAnswers[question.question_id]"
-                :value="answer.id" 
-                class="mr-2"
+        <PanelCard
+          v-for="group in questionGroups"
+          :key="group.subjectId"
+          :title="group.subjectTitle"
+        >
+          <div v-for="day in group.dates" :key="day.date" class="day">
+            <!-- One button per day, at the day level: the dialog submits a
+                 whole day's answers, so per-question buttons asked the same
+                 question several times. -->
+            <div class="day__head">
+              <h3 class="day__date">Posted {{ day.date }}</h3>
+              <button
+                type="button"
+                class="btn btn-primary"
+                @click="openAnswerModal(day)"
               >
-              <span :data-answer-id="answer.id">{{ answer.answer_text }}</span>
-            </label>
+                Answer these questions
+              </button>
+            </div>
+
+            <ul class="task-list">
+              <li
+                v-for="question in day.items"
+                :key="question.question_id"
+                :data-question-id="question.question_id"
+                class="task"
+              >
+                <h4 class="task__title">{{ question.question_text }}</h4>
+                <p class="record__meta">
+                  {{ question.points }}
+                  {{ question.points === 1 ? "point" : "points" }}
+                </p>
+
+                <ul
+                  v-if="question.answers && question.answers.length"
+                  class="answer-list"
+                >
+                  <li
+                    v-for="answer in question.answers"
+                    :key="answer.id"
+                    :data-answer-id="answer.id"
+                    class="answer"
+                  >
+                    {{ answer.answer_text }}
+                  </li>
+                </ul>
+              </li>
+            </ul>
           </div>
-        </div>
-      </div>
-      <button type="submit" class="mt-4 py-2 px-4 bg-blue-500 text-white rounded-md">Submit</button>
-      <button @click="closeModal" type="button" class="mt-4 py-2 px-4 bg-gray-300 text-gray-800 rounded-md">
-        Close
-      </button>
-    </form>
+        </PanelCard>
+      </section>
+    </template>
+
+    <ModalPopup
+      :is-visible="isModalOpen"
+      title="Submit your answers"
+      confirm-label="Submit answers"
+      @confirm="submitAnswers"
+      @cancel="closeModal"
+    >
+      <p v-if="submitError" class="form-error" role="alert">
+        {{ submitError }}
+      </p>
+
+      <form class="form" @submit.prevent="submitAnswers">
+        <fieldset
+          v-for="(question, index) in modalQuestions"
+          :key="question.question_id"
+          class="choice-set"
+        >
+          <legend class="choice-set__legend">
+            {{ question.question_text }}
+          </legend>
+
+          <label
+            v-for="answer in question.answers"
+            :key="answer.id"
+            class="choice"
+          >
+            <input
+              v-model="selectedAnswers[question.question_id]"
+              type="radio"
+              :name="'answer_' + index"
+              :value="answer.id"
+              class="choice__input"
+            />
+            <span>{{ answer.answer_text }}</span>
+          </label>
+        </fieldset>
+      </form>
+    </ModalPopup>
   </div>
-</div>
-</div>
-</div>
 </template>
 
 <script>
 import axios from "@/axios";
+import { apiErrorMessage } from "@/apiError";
+import PanelCard from "@/components/PanelCard.vue";
+import ModalPopup from "@/views/ModalPopup.vue";
+
+/**
+ * Bucket a list by the calendar day of one of its timestamps.
+ *
+ * Returns `[{ date, items }]` rather than an object, so the template can rely
+ * on order and use `date` as a stable key.  An entry with no usable timestamp
+ * is grouped under "No date" instead of throwing.
+ */
+function groupByDay(entries, pickTimestamp) {
+  const buckets = new Map();
+
+  (entries || []).forEach((entry) => {
+    const raw = pickTimestamp(entry);
+    const parsed = raw ? new Date(raw) : null;
+    const key =
+      parsed && !Number.isNaN(parsed.getTime())
+        ? parsed.toLocaleDateString()
+        : "No date";
+    if (!buckets.has(key)) buckets.set(key, []);
+    buckets.get(key).push(entry);
+  });
+
+  return Array.from(buckets, ([date, items]) => ({ date, items }));
+}
+
+/** The API answers `{ [subjectId]: [{ subject_title, todos|questions }] }`. */
+function subjectGroups(bySubject, pickItems, pickTimestamp) {
+  return Object.entries(bySubject).map(([subjectId, entries]) => {
+    const first = (entries && entries[0]) || {};
+    return {
+      subjectId,
+      subjectTitle: first.subject_title || "Subject",
+      dates: groupByDay(pickItems(first), pickTimestamp),
+    };
+  });
+}
 
 export default {
   name: "StudentTasks",
+  components: { PanelCard, ModalPopup },
   data() {
     return {
-      activeView: 'todos',
+      activeView: "todos",
       todosBySubject: {},
       questionsBySubject: {},
-      subjectVisibility: {},
-      groupedQuestionsByDate: {},
-      groupedTodosByDate: {},
+      loading: true,
+      loadError: "",
       isModalOpen: false,
       modalQuestions: [],
-      selectedAnswers: {}, // Stores selected answers for questions
+      selectedAnswers: {},
       currentFormMapId: null,
-      selectedDateHasButton: {} // Tracks the current form_map_id
+      submitError: "",
     };
+  },
+  computed: {
+    todoGroups() {
+      return subjectGroups(
+        this.todosBySubject,
+        (first) => first.todos,
+        (todo) => todo.created_at,
+      );
+    },
+    questionGroups() {
+      return subjectGroups(
+        this.questionsBySubject,
+        (first) => first.questions,
+        // Falls back to the question's own timestamp: a question with no
+        // answers would otherwise throw here and blank the whole page.
+        (question) =>
+          question.answers && question.answers.length
+            ? question.answers[0].created_at
+            : question.created_at,
+      );
+    },
   },
   created() {
     this.fetchTasks();
   },
   methods: {
-    markDateAsShown(date) {
-    this.selectedDateHasButton[date] = true;
-  },
+    async fetchTasks() {
+      this.loading = true;
+      this.loadError = "";
+      try {
+        const response = await axios.get("/student/tasks");
+        this.todosBySubject = response.data.todos_by_subject;
+        this.questionsBySubject = response.data.questions_by_subject;
+      } catch (error) {
+        this.loadError = apiErrorMessage(error, "We couldn't load your tasks.");
+      } finally {
+        this.loading = false;
+      }
+    },
     toggleView(view) {
       this.activeView = view;
     },
-    async fetchTasks() {
-      try {
-        const response = await axios.get('/student/tasks');
-        this.todosBySubject = response.data.todos_by_subject;
-        this.questionsBySubject = response.data.questions_by_subject;
-        this.groupTodosByDate();
-        this.groupQuestionsByDate();
-        for (const subjectId in this.questionsBySubject) {
-          this.subjectVisibility[subjectId] = false;
-        }
-      } catch (error) {
-        console.error("Error fetching tasks:", error);
-      }
-    },
-    toggleSubjectVisibility(subjectId) {
-      this.subjectVisibility[subjectId] = !this.subjectVisibility[subjectId];
-    },
     isImage(file) {
-      return file.match(/\.(jpg|jpeg|png|gif)$/i);
+      return /\.(jpg|jpeg|png|gif)$/i.test(file);
     },
     isPDF(file) {
-      return file.match(/\.pdf$/i);
+      return /\.pdf$/i.test(file);
     },
     isTextFile(file) {
-      return file.match(/\.(txt)$/i);
+      return /\.txt$/i.test(file);
     },
     downloadFile(file) {
-      window.open(file, '_blank');
+      window.open(file, "_blank");
     },
-    groupQuestionsByDate() {
-  for (const subjectId in this.questionsBySubject) {
-    const subjectQuestions = this.questionsBySubject[subjectId];
-    const groupedQuestions = subjectQuestions[0]?.questions.reduce((acc, question) => {
-      const date = new Date(question.answers[0].created_at).toLocaleDateString();
-      if (!acc[date]) {
-        acc[date] = [];
-      }
-      acc[date].push(question);
-      return acc;
-    }, {});
-    
-    this.groupedQuestionsByDate[subjectId] = [
-      { subject_title: subjectQuestions[0]?.subject_title, groupedQuestions }
-    ];
-  }
-},
-    groupTodosByDate() {
-      for (const subjectId in this.todosBySubject) {
-        const subjectTodos = this.todosBySubject[subjectId];
-        const groupedTodos = subjectTodos[0]?.todos.reduce((acc, todo) => {
-          const date = new Date(todo.created_at).toLocaleDateString();
-          if (!acc[date]) {
-            acc[date] = [];
-          }
-          acc[date].push(todo);
-          return acc;
-        }, {});
-        this.groupedTodosByDate[subjectId] = [
-          { subject_title: subjectTodos[0]?.subject_title, groupedTodos }
-        ];
-      }
-    },
-    openAnswerModal(questionGroup, formMapId) {
-      this.modalQuestions = questionGroup;
-      this.currentFormMapId = formMapId; // Set current form_map_id for the modal
+    /** Opens the answer dialog for one day's questions. */
+    openAnswerModal(day) {
+      this.modalQuestions = day.items;
+      const first = day.items[0];
+      this.currentFormMapId = first ? first.form_map_id : null;
+      this.selectedAnswers = {};
+      this.submitError = "";
       this.isModalOpen = true;
     },
     closeModal() {
       this.isModalOpen = false;
       this.modalQuestions = [];
       this.currentFormMapId = null;
-      this.selectedAnswers = {}; // Reset selected answers
-    },
-    selectAnswer(questionId, answerId) {
-      // Store the selected answer for each question
-      this.selectedAnswers[questionId] = answerId;
+      this.selectedAnswers = {};
+      this.submitError = "";
     },
     async submitAnswers() {
-      
-  try {
-    
-    // Filter out questions without selected answers
-    const answeredQuestions = this.modalQuestions.filter(
-      question => this.selectedAnswers[question.question_id]
-    );
+      this.submitError = "";
 
-    if (answeredQuestions.length === 0) {
-      alert("Please select answers for at least one question.");
-      return;
-    }
+      const answeredQuestions = this.modalQuestions.filter(
+        (question) => this.selectedAnswers[question.question_id],
+      );
 
-    // Prepare the submission payload with only answered questions
-    const submissions = answeredQuestions.map(question => ({
-      question_id: question.question_id,
-      answer_id: this.selectedAnswers[question.question_id]
-    }));
+      // Was an `alert()`: a modal on top of a modal, and it said nothing about
+      // which questions were still blank.
+      if (answeredQuestions.length === 0) {
+        this.submitError = "Choose an answer for at least one question first.";
+        return;
+      }
 
-    const payload = {
-      form_map_id: this.currentFormMapId,
-      submissions
-    };
+      const payload = {
+        form_map_id: this.currentFormMapId,
+        submissions: answeredQuestions.map((question) => ({
+          question_id: question.question_id,
+          answer_id: this.selectedAnswers[question.question_id],
+        })),
+      };
 
-    // Send the submission to the backend
-    await axios.post('/student/submit-answers', payload);
-    this.closeModal();
-    console.log("Answers submitted successfully.");
-  } catch (error) {
-    console.error("Error submitting answers:", error);
-  }
-}
-  }
+      try {
+        await axios.post("/student/submit-answers", payload);
+        this.closeModal();
+      } catch (error) {
+        this.submitError = apiErrorMessage(
+          error,
+          "We couldn't submit your answers. Please try again.",
+        );
+      }
+    },
+  },
 };
 </script>
 
-
 <style scoped>
-/* Add custom styling as needed */
+.task-skeleton {
+  display: block;
+  height: 4rem;
+}
+
+/* A day is a labelled block inside a subject panel. */
+.day + .day {
+  margin-top: var(--space-6);
+}
+
+.day__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.day__date {
+  font-size: var(--step-0);
+  font-weight: 700;
+  color: var(--text);
+}
+
+.task-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
+.task {
+  padding: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-muted);
+}
+
+.task__title {
+  font-size: var(--step-0);
+  font-weight: 600;
+  color: var(--text);
+}
+
+.task__attachment {
+  margin-top: var(--space-3);
+}
+
+.task__image {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius);
+}
+
+/* The viewer is a fixed fraction of the viewport rather than a fixed 24rem, so
+   it stays usable on a phone and does not dominate a laptop. */
+.task__frame {
+  width: 100%;
+  height: 60vh;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: #ffffff;
+}
+
+.answer-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-top: var(--space-2);
+  padding-left: var(--space-4);
+  list-style: disc;
+  color: var(--text-muted);
+}
+
+.choice-set {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.choice-set + .choice-set {
+  margin-top: var(--space-4);
+}
+
+.choice-set__legend {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.choice {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+  color: var(--text);
+}
+
+.choice__input {
+  width: 1.15rem;
+  height: 1.15rem;
+}
 </style>

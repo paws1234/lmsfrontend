@@ -1,102 +1,107 @@
 <template>
-  <div class="min-h-screen bg-blue-50 p-6 flex items-center justify-center">
-    <div class="max-w-lg w-full bg-blue-100 p-8 rounded-lg shadow-md">
-      <h1 class="text-2xl font-bold text-gray-900 mb-6 text-center">
-        {{ isEditing ? "Edit Student" : "Create Student" }}
+  <div class="page">
+    <header class="page__head">
+      <p class="page__eyebrow">People</p>
+      <h1 class="page__title">
+        {{ isEditing ? "Edit student" : "Add a student" }}
       </h1>
+      <p class="page__lead">
+        {{
+          isEditing
+            ? "Update this student's details or reset their password."
+            : "Creates a student account the student can sign in with straight away."
+        }}
+      </p>
+    </header>
 
-      <form class="space-y-6" @submit.prevent="submitForm">
+    <p v-if="error" class="alert alert-error" role="alert">{{ error }}</p>
+
+    <div class="card card-pad form-narrow">
+      <form class="form" @submit.prevent="submitForm">
         <div>
-          <label for="name" class="block text-md font-bold text-blue-900 mb-1"
-            >Name</label
-          >
+          <label class="form-label" for="name">Full name</label>
           <input
             id="name"
             v-model="name"
-            name="name"
+class="form-field"
             type="text"
-            placeholder="Enter student name"
-            required
-            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+placeholder="e.g. Juan Dela Cruz"
+            autocomplete="name"
+required
           />
         </div>
 
         <div>
-          <label
-            for="email"
-            class="block text-md font-bold text-blue-900 mb-1"
-            >Email</label
-          >
+          <label class="form-label" for="email">Email address</label>
           <input
             id="email"
             v-model="email"
-            name="email"
+class="form-field"
             type="email"
-            placeholder="Enter student email"
-            required
-            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+placeholder="student@ctu.edu.ph"
+            autocomplete="email"
+required
           />
+          <p class="form-help">
+            Used to sign in. It must not already belong to another account.
+          </p>
         </div>
 
         <div>
-          <label
-            for="password"
-            class="block text-md font-bold text-blue-900 mb-1"
-            >Password</label
-          >
+          <label class="form-label" for="password">Password</label>
           <input
             id="password"
             v-model="password"
-            name="password"
+class="form-field"
             type="password"
-            placeholder="Enter password"
+:placeholder="isEditing
+              ? 'Leave blank to keep the current password'
+              : 'At least 8 characters'
+            " :autocomplete="isEditing ? 'off' : 'new-password'"
             :required="!isEditing"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            aria-describedby="password-help"
           />
+          <p id="password-help" class="form-help">
+            {{
+              isEditing
+                ? "Only fill this in if you want to set a new password."
+                : "The student can change it later from their account."
+            }}
+          </p>
         </div>
 
         <div>
-          <label
-            for="confirmPassword"
-            class="block text-md font-bold text-blue-900 mb-1"
-            >Confirm Password</label
+          <label class="form-label" for="confirmPassword">Confirm password</label
           >
           <input
             id="confirmPassword"
             v-model="confirmPassword"
-            name="confirmPassword"
+class="form-field"
             type="password"
-            placeholder="Confirm password"
-            required
-            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            placeholder="Type the password again" autocomplete="new-password" :required="!isEditing"
+            :aria-invalid="passwordMismatch ? 'true' : null"
+            :aria-describedby="passwordMismatch ? 'confirm-error' : null"
           />
+          <!-- Announced as soon as it appears: the user does not have to
+               submit the form to learn the two do not match. -->
+          <p v-if="passwordMismatch" id="confirm-error" class="form-error" role="alert">
+            The two passwords do not match.
+          </p>
         </div>
 
-        <div class="flex flex-col gap-4">
+        <div class="form-actions">
           <button
+class="btn btn-primary"
             type="submit"
-            class="w-full py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+:disabled="saving || passwordMismatch"
           >
-            {{ isEditing ? "Update" : "Create" }}
+            {{
+              saving ? "Saving…" : isEditing ? "Save changes" : "Create student"
+            }}
           </button>
-          <router-link
-            to="/admin/students"
-            class="w-full inline-block px-4 py-2 bg-gray-600 text-white rounded-md shadow hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 text-center"
-          >
-            Back to List
+          <router-link class="btn btn-ghost" to="/admin/students">
+            Cancel
           </router-link>
-        </div>
-        <div
-          v-if="feedbackMessage"
-          class="text-sm font-medium text-gray-700 mt-4"
-        >
-          <p
-            :class="
-              feedbackType === 'error' ? 'text-red-600' : 'text-green-600'
-            "
-          >
-            {{ feedbackMessage }}
-          </p>
         </div>
       </form>
     </div>
@@ -105,8 +110,10 @@
 
 <script>
 import axios from "@/axios";
+import { apiErrorMessage } from "@/apiError";
 
 export default {
+  name: "StudentForm",
   data() {
     return {
       name: "",
@@ -114,37 +121,49 @@ export default {
       password: "",
       confirmPassword: "",
       isEditing: false,
-      feedbackMessage: "",
-      feedbackType: "",
+      saving: false,
+      error: "",
     };
+  },
+  computed: {
+    /* Only complains once there is something to compare: an untouched
+       "confirm" box next to an empty password is not a mistake yet. */
+    passwordMismatch() {
+      return (
+        this.confirmPassword !== "" && this.password !== this.confirmPassword
+      );
+    },
   },
   mounted() {
     if (this.$route.params.id) {
       this.isEditing = true;
-      this.fetchTeacher(this.$route.params.id);
+      this.fetchStudent(this.$route.params.id);
     }
   },
   methods: {
-    async fetchTeacher(id) {
+    async fetchStudent(id) {
       try {
         const response = await axios.get(`/admin/students/${id}`);
         this.name = response.data.name;
         this.email = response.data.email;
       } catch (error) {
-        this.feedbackMessage =
-          "Error fetching teacher details. Please try again.";
-        this.feedbackType = "error";
+        this.error = apiErrorMessage(
+          error,
+          "We couldn't load this student's details.",
+        );
       }
     },
     async submitForm() {
-      if (!this.isEditing && this.password !== this.confirmPassword) {
-        this.feedbackMessage = "Passwords do not match. Please try again.";
-        this.feedbackType = "error";
+      if (this.password !== this.confirmPassword) {
+      // The inline message beside the field already says this; setting the
+      // flag again here would only add a second, redundant alert.
         return;
       }
 
+      this.saving = true;
+      this.error = "";
       try {
-        const method = this.isEditing ? "PUT" : "POST";
+        const method = this.isEditing ? "put" : "post";
         const url = this.isEditing
           ? `/admin/students/${this.$route.params.id}`
           : "/admin/students";
@@ -157,18 +176,17 @@ export default {
             password: this.password,
           },
         });
-        this.feedbackMessage = this.isEditing
-          ? "Student updated successfully!"
-          : "Student created successfully!";
-        this.feedbackType = "success";
         this.$router.push("/admin/students");
       } catch (error) {
-        this.feedbackMessage = "Error submitting form. Please try again.";
-        this.feedbackType = "error";
+        this.error = apiErrorMessage(
+          error,
+          "We couldn't save this student. Please check the details and try again.",
+        );
+      } finally {
+        this.saving = false;
       }
     },
   },
 };
 </script>
 
-<style scoped></style>

@@ -1,11 +1,15 @@
 <template>
-  <div class="scores max-w-4xl mx-auto p-4">
-    <h2 class="text-3xl font-semibold text-center text-gray-800 mb-6">Your Scores</h2>
+  <div class="page">
+    <header class="page__head">
+      <p class="page__eyebrow">Student portal</p>
+      <h1 class="page__title">Your scores</h1>
+      <p class="page__lead">
+        Results are grouped by form. Where a form is not perfect you can open
+        your answers and see what the correct one was.
+      </p>
+    </header>
 
-    <div v-if="loading" class="flex flex-col items-center justify-center space-y-4 mb-6">
-      <div class="spinner"></div>
-      <p class="text-lg font-medium text-gray-600">Loading scores…</p>
-    </div>
+    <p v-if="loading" class="sr-only" role="status">Loading scores…</p>
 
     <div v-else-if="profileMissing" class="empty-state">
       <p class="empty-state-title">Your profile is not set up yet</p>
@@ -20,80 +24,89 @@
       <p>They appear once your teacher publishes results.</p>
     </div>
 
-    <p v-else-if="error" class="alert alert-error">
-      We couldn't load your scores. Please try again later.
+    <p v-else-if="error" class="alert alert-error" role="alert">
+      We couldn't load your scores.
+      <button type="button" class="btn btn-ghost alert__action" @click="fetchScores">
+        Try again
+      </button>
     </p>
 
     <template v-else>
-      <div v-for="(formScores, formMapId) in scoresByFormMapId" :key="formMapId" class="mb-6">
-        <div class="bg-white shadow-lg rounded-lg p-4">
-          <h3 class="text-2xl font-bold text-gray-700 mb-4">Form: {{ formMapId }}</h3>
-          <ul class="space-y-4">
-            <li v-for="(score, index) in formScores" :key="index"
-              class="flex justify-between items-center border-b pb-4">
-              <div>
-                <p class="text-lg font-medium text-gray-600">
-                  Correct Answer: <span class="font-bold text-blue-600">{{ score.correct_answers_count }}</span> /
-                  Perfect Score: <span class="font-bold text-blue-600">{{ score.perfect_score || score.total_submissions
-                    }}</span>
-                </p>
-                <p class="text-xl font-semibold text-gray-800 mt-2">
-                  <span class="text-green-500">{{ score.correct_answers_count }}</span> /
-                  <span class="text-gray-500">{{ score.total_submissions }}</span>
-                </p>
-              </div>
-              <div class="flex items-center space-x-2">
-                <span v-if="score.correct_answers_count === score.total_submissions"
-                  class="text-green-500 font-bold text-lg">Perfect</span>
-                <span v-else class="text-yellow-500 font-semibold"
-                  @click="openReviewModal(score.submissions)">Review</span>
-              </div>
-            </li>
-          </ul>
-        </div>
-      </div>
+      <PanelCard v-for="(formScores, formMapId) in scoresByFormMapId" :key="formMapId" :title="`Form ${formMapId}`">
+        <ul class="record-list">
+          <li v-for="(score, index) in formScores" :key="index" class="record">
+            <div>
+              <p class="score">
+                <span class="score__value">{{
+                  score.correct_answers_count
+                  }}</span>
+                <span class="score__out-of">/ {{ score.perfect_score || score.total_submissions }}</span>
+              </p>
+              <p class="record__facts">
+                <span class="record__fact">
+                  <span class="record__fact-label">Correct</span>
+                  {{ score.correct_answers_count }}
+                </span>
+                <span class="record__fact">
+                  <span class="record__fact-label">Perfect score</span>
+                  {{ score.perfect_score || score.total_submissions }}
+                </span>
+                <span class="record__fact">
+                  <span class="record__fact-label">Submissions</span>
+                  {{ score.total_submissions }}
+                </span>
+              </p>
+            </div>
+            <div class="record__actions">
+              <span v-if="score.correct_answers_count === score.total_submissions" class="badge badge--success">
+                Perfect
+              </span>
+              <!-- Used to be a `<span @click>`: unreachable by keyboard and
+                   invisible to assistive technology as a control. -->
+              <button v-else type="button" class="action-link" @click="openReviewModal(score.submissions)">
+                Review answers
+              </button>
+            </div>
+          </li>
+        </ul>
+      </PanelCard>
     </template>
 
-    <!-- Modal to review submission details -->
-    <div v-if="isModalOpen" class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
-      <div class="bg-white p-6 rounded-lg shadow-lg w-3/4 max-w-3xl">
-        <h3 class="text-2xl font-semibold mb-4">Submission Details</h3>
-        
-        <!-- Table displaying the submission details -->
-        <table class="min-w-full table-auto border-collapse">
+    <ModalPopup :is-visible="isModalOpen" title="Submission details" confirm-label="Close" cancel-label=""
+      @confirm="closeModal" @cancel="closeModal">
+      <div class="table-wrap">
+        <table class="table">
           <thead>
             <tr>
-              <th class="border-b py-2 px-4 text-left">Question</th>
-              <th class="border-b py-2 px-4 text-left">Your Answer</th>
-              <th class="border-b py-2 px-4 text-left">Correct Answer</th>
-              <th class="border-b py-2 px-4 text-left">Status</th>
+              <th scope="col">Question</th>
+              <th scope="col">Your answer</th>
+              <th scope="col">Correct answer</th>
+              <th scope="col">Result</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="(submission, index) in submissionDetails" :key="index">
-              <td class="border-b py-2 px-4">{{ submission.question.text }}</td>
-              <td class="border-b py-2 px-4">{{ submission.answer.value }}</td>
-              <td class="border-b py-2 px-4">{{ getCorrectAnswer(submission.question.id) }}</td>
-              <td class="border-b py-2 px-4">
-                <span v-if="submission.is_correct" class="text-green-500">Correct</span>
-                <span v-else class="text-red-500">Wrong</span>
+              <td>{{ submission.question.text }}</td>
+              <td>{{ submission.answer.value }}</td>
+              <td>{{ getCorrectAnswer(submission.question.id) }}</td>
+              <td>
+                <span class="badge" :class="submission.is_correct ? 'badge--success' : 'badge--danger'
+                  ">
+                  {{ submission.is_correct ? "Correct" : "Wrong" }}
+                </span>
               </td>
             </tr>
           </tbody>
         </table>
-        
-        <!-- Close Modal Button -->
-        <div class="mt-4 flex justify-end">
-          <button @click="closeModal" class="bg-red-500 text-white py-2 px-4 rounded">Close</button>
-        </div>
       </div>
-    </div>
-
+    </ModalPopup>
   </div>
 </template>
 
 <script>
 import axios from "@/axios";
+import PanelCard from "@/components/PanelCard.vue";
+import ModalPopup from "@/views/ModalPopup.vue";
 
 /* ScoreController::index() answers 404 for two different situations and separates
    them only by message text — both use the same `message` key:
@@ -108,6 +121,7 @@ const NO_STUDENT_PROFILE = "student not found";
 
 export default {
   name: "StudentScores",
+  components: { PanelCard, ModalPopup },
   data() {
     return {
       scores: {},
@@ -141,7 +155,7 @@ export default {
       this.error = false;
       this.profileMissing = false;
       try {
-        const response = await axios.get('/student/scores');
+        const response = await axios.get("/student/scores");
         this.scores = response.data.score_data;
         this.groupScoresByFormMapId();
       } catch (error) {
@@ -176,10 +190,10 @@ export default {
       this.scoresByFormMapId = grouped;
     },
     openReviewModal(submissions) {
-      this.submissionDetails = submissions.map(submission => ({
+      this.submissionDetails = submissions.map((submission) => ({
         ...submission,
         question: submission.question || {},
-        answer: submission.answer || {}
+        answer: submission.answer || {},
       }));
       this.isModalOpen = true;
     },
@@ -188,38 +202,32 @@ export default {
       this.submissionDetails = [];
     },
     getCorrectAnswer(questionId) {
-      const correctSubmission = this.submissionDetails.find(sub => sub.question.id === questionId && sub.is_correct);
-      return correctSubmission ? correctSubmission.answer.value : "Not available";
-    }
+      const correctSubmission = this.submissionDetails.find(
+        (sub) => sub.question.id === questionId && sub.is_correct,
+      );
+      return correctSubmission
+        ? correctSubmission.answer.value
+        : "Not available";
+    },
   },
 };
 </script>
 
 <style scoped>
-/* Custom styling for modal and table */
-table {
-  width: 100%;
-  border-collapse: collapse;
+.score {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-1);
 }
 
-th, td {
-  border: 1px solid var(--border);
-  padding: 8px 16px;
+.score__value {
+  font-size: var(--step-2);
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--text);
 }
 
-th {
-  background-color: var(--surface-muted);
-}
-
-td {
-  text-align: left;
-}
-
-button {
-  transition: background-color 0.3s;
-}
-
-button:hover {
-  background-color: #c53030;
+.score__out-of {
+  color: var(--text-muted);
 }
 </style>

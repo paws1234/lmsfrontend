@@ -1,77 +1,93 @@
 <template>
-  <div class="min-h-screen bg-blue-50 p-6">
-    <header class="mb-6">
-      <h1 class="text-3xl font-bold text-gray-900 mb-4 text-center">Courses</h1>
-      <router-link
-        to="/admin/courses/create"
-        class="bg-blue-600 text-white px-6 py-3 rounded-md shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150"
-      >
-        Create New Course
-      </router-link>
+  <div class="page">
+    <header class="page__head">
+      <p class="page__eyebrow">Catalogue</p>
+      <h1 class="page__title">Courses</h1>
+      <p class="page__lead">
+        Every course students can be enrolled in. Edit a course to change its
+        title or description.
+      </p>
     </header>
 
-    <div
-      v-if="loading"
-      class="flex flex-col items-center justify-center space-y-4 mb-6"
-    >
-      <div class="loader"></div>
-      <p class="text-blue-900 text-lg font-medium">Loading courses...</p>
+    <div class="toolbar">
+      <div class="toolbar__group">
+        <router-link class="btn btn-primary" to="/admin/courses/create">
+          New course
+        </router-link>
+      </div>
     </div>
 
-    <p v-if="error" class="text-red-600 text-lg font-medium text-center mb-6">
-      Error loading courses. Please try again later.
+    <p v-if="loading" class="sr-only" role="status">Loading courses…</p>
+
+    <p v-if="notice" class="alert alert-success" role="status">
+      {{ notice }}
     </p>
 
-    <p
-      v-if="!loading && !error && !courses.length"
-      class="text-blue-900 text-lg font-medium text-center mb-6"
-    >
-      No courses found.
+    <p v-if="error" class="alert alert-error" role="alert">
+      {{ error }}
+      <button type="button" class="btn btn-ghost alert__action" @click="fetchCourses">
+        Try again
+      </button>
     </p>
 
-    <div v-if="courses.length" class="bg-blue-100 p-6 rounded-lg shadow-md">
-      <ul class="space-y-4">
-        <li
-          v-for="course in courses"
-          :key="course.id"
-          class="p-4 border-b border-gray-200 flex items-start justify-between"
-        >
-          <div class="flex-1">
-            <h2 class="text-lg font-semibold text-blue-900">
-              {{ course.title }}
-            </h2>
-            <p class="text-blue-900">{{ course.description }}</p>
+    <PanelCard v-else title="All courses" :loading="loading" :empty="!courses.length" empty-title="No courses yet"
+      empty-text="Courses you create appear here, and can then be assigned to students.">
+      <ul class="record-list">
+        <li v-for="course in courses" :key="course.id" class="record">
+          <div>
+            <h3 class="record__title">{{ course.title }}</h3>
+            <p v-if="course.description" class="record__meta">
+              {{ course.description }}
+            </p>
           </div>
-          <div class="ml-4 flex-shrink-0 space-x-4">
+          <div class="record__actions">
             <router-link
               :to="`/admin/courses/${course.id}/edit`"
-              class="text-blue-600 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150"
+class="action-link"
             >
               Edit
             </router-link>
             <button
-              class="bg-red-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 transition duration-150"
-              @click="deleteCourse(course.id)"
+type="button" class="action-link action-link--danger" @click="askDelete(course)"
             >
               Delete
             </button>
           </div>
         </li>
       </ul>
-    </div>
+    </PanelCard>
+
+    <ModalPopup :is-visible="showModal" tone="danger" title="Delete this course?" confirm-label="Delete"
+      :message="deleteMessage" @confirm="confirmDelete" @cancel="cancelDelete" />
   </div>
 </template>
 
 <script>
 import axios from "@/axios";
+import { apiErrorMessage } from "@/apiError";
+import PanelCard from "@/components/PanelCard.vue";
+import ModalPopup from "@/views/ModalPopup.vue";
 
 export default {
+  name: "CourseList",
+  components: { PanelCard, ModalPopup },
   data() {
     return {
       courses: [],
       loading: true,
-      error: false,
+      // A message, not a boolean: the API's own wording is more useful than
+      // "Error loading courses", and a boolean cannot carry it.
+      error: "",
+      notice: "",
+      showModal: false,
+      courseToDelete: null,
     };
+  },
+  computed: {
+    deleteMessage() {
+      const title = this.courseToDelete ? this.courseToDelete.title : "";
+      return `“${title}” and any enrolments in it will be removed. This cannot be undone.`;
+    },
   },
   mounted() {
     this.fetchCourses();
@@ -79,56 +95,43 @@ export default {
   methods: {
     async fetchCourses() {
       this.loading = true;
-      this.error = false;
+      this.error = "";
       try {
         const response = await axios.get("/admin/courses");
         this.courses = response.data.courses;
       } catch (error) {
-        console.error("Error fetching courses:", error);
-        this.error = true;
+        this.error = apiErrorMessage(
+          error,
+          "We couldn't load the course list.",
+        );
       } finally {
         this.loading = false;
       }
     },
-    async deleteCourse(id) {
-      if (confirm("Are you sure you want to delete this course?")) {
-        try {
-          await axios.delete(`/admin/courses/${id}`);
-          this.fetchCourses();
-        } catch (error) {
-          console.error("Error deleting course:", error);
-          this.error = true;
-        }
+    askDelete(course) {
+      this.courseToDelete = course;
+      this.showModal = true;
+    },
+    cancelDelete() {
+      this.showModal = false;
+      this.courseToDelete = null;
+    },
+    async confirmDelete() {
+      const course = this.courseToDelete;
+      this.showModal = false;
+      this.courseToDelete = null;
+      if (!course) return;
+      this.notice = "";
+      this.error = "";
+      try {
+        await axios.delete(`/admin/courses/${course.id}`);
+        this.courses = this.courses.filter((item) => item.id !== course.id);
+        this.notice = `“${course.title}” was deleted.`;
+      } catch (error) {
+        this.error = apiErrorMessage(error, "We couldn't delete that course.");
       }
     },
   },
 };
 </script>
 
-<style scoped>
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-.loader {
-  border: 8px solid #f3f3f3;
-  border-top: 8px solid #3498db;
-  border-radius: 50%;
-  width: 80px;
-  height: 80px;
-  animation: spin 1.5s linear infinite;
-}
-
-input:focus,
-textarea:focus,
-button:focus,
-a:focus {
-  outline: none;
-  box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.5);
-}
-</style>

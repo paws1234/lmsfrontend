@@ -604,3 +604,381 @@ select {
 .dark .hover\:bg-gray-100:hover {
   background-color: var(--surface);
 }
+/* ---------------------------------------------------------------------------
+   Page toolbar
+
+   The row that sits between a page head and the content it filters: the
+   primary action and a search box.  One definition, so the ~20 list pages
+   cannot each pick their own spacing.
+   --------------------------------------------------------------------------- */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.toolbar__group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* A search box grows to fill its row but stops before it reads as a form.
+   `min-width: 0` lets it shrink inside a flex row on a narrow screen. */
+.search {
+  flex: 1 1 14rem;
+  min-width: 0;
+  max-width: 24rem;
+}
+
+/* ---------------------------------------------------------------------------
+   Record list
+
+   For a list whose rows carry their own actions (courses, students, teachers,
+   schedules, events).  Divider between rows rather than a card per row: the
+   page is already a card, and nesting surfaces inside it flattens the
+   hierarchy.
+   --------------------------------------------------------------------------- */
+.record-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.record {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-2);
+  padding: var(--space-4) 0;
+  /* Divider belongs *between* rows, so the first row has none — see the
+     `:first-child` rule below rather than a `border-bottom` on every row. */
+  border-top: 1px solid var(--border);
+}
+
+.record:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.record:last-child {
+  padding-bottom: 0;
+}
+
+.record__title {
+  font-size: var(--step-1);
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--text);
+}
+
+.record__meta {
+  color: var(--text-muted);
+}
+
+/* Label/value pairs on one wrapping line ("Day Monday · 8:00–10:00 · Room 204"). */
+.record__facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+  margin-top: var(--space-2);
+  color: var(--text-muted);
+}
+
+.record__fact {
+  display: inline-flex;
+  gap: var(--space-1);
+}
+
+.record__fact-label {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.record__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* From tablet up the actions sit in their own right-hand column, so a long
+   title wraps instead of pushing them onto a second line. */
+@media (min-width: 640px) {
+  .record {
+    grid-template-columns: 1fr auto;
+    align-items: start;
+    gap: var(--space-4);
+  }
+
+  .record__actions {
+    justify-content: flex-end;
+  }
+}
+
+/* A text action ("Edit", "Delete") that reads as a link but is a real control.
+   Both variants are declared here — not as `text-blue-600` utilities — because
+   the dark values differ and a utility cannot express "one colour per theme"
+   for the same class. */
+.action-link {
+  padding: 2px var(--space-1);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  font: inherit;
+  font-size: var(--step--1);
+  font-weight: 600;
+  color: var(--link);
+  cursor: pointer;
+}
+
+.action-link:hover {
+  text-decoration: underline;
+}
+
+.action-link--danger {
+  color: var(--danger);
+}
+
+/* ---------------------------------------------------------------------------
+   Data table
+
+   Wrapped in `.table-wrap` so a wide table scrolls inside its card instead of
+   making the whole page scroll sideways.
+   --------------------------------------------------------------------------- */
+.table-wrap {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  padding: var(--space-3);
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--border);
+}
+
+.table th {
+  font-size: var(--step--1);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--text-muted);
+  background: var(--surface-muted);
+}
+
+.table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.table tbody tr:hover {
+  background: var(--surface-muted);
+}
+
+/* The trailing actions column reads better against the right edge. */
+.table th:last-child,
+.table td:last-child {
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* ---------------------------------------------------------------------------
+   Forms
+   --------------------------------------------------------------------------- */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4);
+}
+
+@media (min-width: 640px) {
+  .form-grid--2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Inline validation message, tied to its control with aria-describedby. */
+.form-error {
+  display: block;
+  margin-top: var(--space-1);
+  font-size: var(--step--1);
+  font-weight: 600;
+  color: var(--danger);
+}
+
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* A form panel keeps a readable measure instead of stretching to 1180px. */
+.form-narrow {
+  max-width: 40rem;
+}
+
+/* ---------------------------------------------------------------------------
+   Status badge
+   --------------------------------------------------------------------------- */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 2px var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-muted);
+  color: var(--text-muted);
+  font-size: var(--step--1);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.badge--info {
+  background: var(--info-surface);
+  color: var(--link);
+}
+
+.badge--success {
+  background: var(--success-surface);
+  border-color: var(--success);
+  color: var(--success);
+}
+
+.badge--danger {
+  background: var(--danger-surface);
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+/* ---------------------------------------------------------------------------
+   Tabs
+
+   Real `role="tab"` buttons.  Selection is expressed with `aria-selected`, so
+   the styling follows the accessibility state rather than a separate class
+   that could disagree with it.
+   --------------------------------------------------------------------------- */
+.tabs {
+  display: flex;
+  gap: var(--space-1);
+  width: fit-content;
+  max-width: 100%;
+  padding: var(--space-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-muted);
+  overflow-x: auto;
+}
+
+.tabs__tab {
+  padding: var(--space-2) var(--space-3);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  font: inherit;
+  font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.tabs__tab[aria-selected="true"] {
+  background: var(--surface-raised);
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ---------------------------------------------------------------------------
+   Modal
+
+   Used by `ModalPopup.vue` (confirmations) and by the two views that present
+   details in a dialog.  Kept here rather than in the component so a second
+   dialog cannot invent its own backdrop.
+   --------------------------------------------------------------------------- */
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  /* A translucent scrim reads as "behind the dialog" in both themes. */
+  background: rgba(9, 20, 38, 0.62);
+}
+
+.modal__panel {
+  width: 100%;
+  max-width: 34rem;
+  /* Long content scrolls inside the dialog instead of off the screen. */
+  max-height: calc(100vh - 2 * var(--space-4));
+  overflow-y: auto;
+  padding: var(--space-6);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface-raised);
+  color: var(--text);
+  box-shadow: var(--shadow-lg);
+}
+
+.modal__title {
+  font-size: var(--step-2);
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--text);
+}
+
+.modal__body {
+  margin-top: var(--space-2);
+  color: var(--text-muted);
+}
+
+.modal__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  margin-top: var(--space-6);
+}
+
+/* A card that needs the panel padding but not PanelCard's loading/empty
+   machinery. */
+.card-pad {
+  padding: var(--space-4);
+}
+
+@media (min-width: 640px) {
+  .card-pad {
+    padding: var(--space-6);
+  }
+}
+
+/* Vertical rhythm for a card whose pieces are not a form (a heading above a
+   form, two stacked panels). */
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* Section heading inside a panel, below the page title. */
+.section-title {
+  font-size: var(--step-1);
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--text);
+}
