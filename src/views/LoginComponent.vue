@@ -90,6 +90,7 @@
 
 <script>
 import axios from "@/axios";
+import { apiErrorMessage } from "@/apiError";
 import LoadingSpinner from "@/views/LoadingSpinner.vue";
 
 export default {
@@ -128,13 +129,14 @@ export default {
         // Navigate to the user's dashboard based on their role
         this.$router.push(`/${response.data.role}/dashboard`);
       } catch (error) {
-        console.error(
-          "Login error:",
-          error.response?.data?.message || error.message
+        console.error("Login error:", error);
+        // A rejected request and a server we cannot reach are different
+        // problems and get different sentences.  The axios interceptor
+        // decrypts the error body, so the API's own wording is available here.
+        this.errorMessage = apiErrorMessage(
+          error,
+          "An error occurred. Please try again.",
         );
-        this.errorMessage =
-          error.response?.data?.message ||
-          "An error occurred. Please try again.";
         this.loading = false;
       }
     },

@@ -45,11 +45,49 @@ Status: **in progress** · Owner: frontend (`lmsfrontend`) · Last updated 2026-
   page, so `screenshot_page` is losing text at that size in this session — the 1440 check is
   DOM-measured, not eyeballed.
 
+- **F5 / F6 fixed (T4.1–T4.5, 2026-09-13).** The axios response interceptor now decrypts the **error**
+  body too — it previously decrypted only successes, which is why no view could ever show the API's
+  own wording. A wrong password now renders "Invalid credentials" and an unreachable server renders
+  "We can't reach the server…". A new `src/apiError.js` normalises the body key, because
+  `ScoreController` answers 404 with `message` while `StudentDashboardController` answers 404 with
+  `error`, so any `message`-only read returned `undefined`. The student dashboard renders a "your
+  profile is not set up yet" panel on that 404 instead of zeros, and its dead `loadDashboardData()`
+  no-op is gone. Lint improved by one warning (792 → 791); the build still passes. Measurements in
+  `UI-UX-BASELINE.md` T4.1–T4.5.
+
 ### Still open
-- **F5 / F6** — error and missing-profile states (Phase 4). Not started.
+- **F5** — *partly fixed.* Error bodies are decrypted and the two failure kinds are distinguished,
+  but only on the login form; `RegisterComponent` (T4.6) still needs the same treatment, and the
+  frontend-vs-backend decision for F6 (T4.7) is unmade.
+- **F6** — *fixed for the student dashboard.* A missing `students` row now renders a "your profile is
+  not set up yet" panel instead of zeros. The scores page still says "No scores yet" for the same
+  condition; both are 404s, distinguishable only by the body key, which is now readable — worth
+  revisiting rather than leaving as-is.
 - **F9** — the dead `dotenv` dependency and the unused `localStorageInterceptor.js`.
 - Phase 6 polish, and the accessibility half of Phase 2.
-- Not yet done: committing/pushing, and redeploying Vercel with the new build.
+
+### Repository and deploy state (corrected 2026-09-13)
+
+The previous revision of this section read "Not yet done: committing/pushing, and redeploying Vercel
+with the new build." The first half was **stale**. Re-verified:
+
+- **Committed and pushed.** `git rev-parse HEAD` = `git rev-parse origin/main` = `8049da6`
+  ("create tasks"), and `git rev-list --left-right --count origin/main...HEAD` returns `0 0` — neither
+  ahead nor behind. The tracked tree is clean; the only untracked file is the new
+  `UI-UX-BASELINE.md`, which is a working document, not yet committed.
+- **The only remaining deploy step is a Vercel redeploy** with this build. Nothing here has confirmed
+  which commit the deployed build corresponds to; that check belongs to T6.3, alongside confirming
+  `VUE_APP_API_BASE_URL` is still the sole endpoint switch.
+- **The local API is pointed at remote Supabase, not the local `db` container.**
+  `backend/lmsbackend/.env:32` holds an active `DATABASE_URL` on
+  `aws-0-ap-northeast-1.pooler.supabase.com`, and the measured cost is a floor of **1.0–2.3 s on every
+  request** (valid login 1.20 s, register 2.64 s). No cold start — attempt 1 was not the slowest — but
+  this contradicts §2 goal 5 ("local-first iteration"). Measured and explained in
+  `UI-UX-BASELINE.md` T0.5. Restoring the local loop is one commented-out line plus a backend
+  recreate, deliberately left to the owner because it changes which data the app displays.
+
+Every claim in this plan is now backed by numbers in **`UI-UX-BASELINE.md`** (build size, lint
+counts, route inventory). This file states intent; that one holds the measurements.
 
 ## 1. Why — evidence gathered by reading the code
 
@@ -59,8 +97,8 @@ Status: **in progress** · Owner: frontend (`lmsfrontend`) · Last updated 2026-
 | F2 | **Dark mode cannot fully work.** `HomeComponent.vue` styles with `dark:bg-black`, `dark:text-gray-300`. Tailwind 2's CDN build uses the default config where `darkMode` is off, so no `dark:` utilities exist — the author had to drive some colours from JS instead. | Verified (files); one click to confirm |
 | F3 | **Login/Register logo overlaps the form card on mobile.** The wrapper is `absolute top-24 right-1/3 md:top-5 md:right-32 …` with **no positioned ancestor**, so it lays out against the viewport instead of the card. | Verified: 53 px overlap at 390×844 (logo y 108–236, card top 183) |
 | F4 | **Scores page renders blank when there is no data.** `ScoreController::index()` returns `404 {"message":"No submissions found for this student"}`; the view shows only the "Your Scores" heading plus a console error. | Verified in the deployed app | Fixed |
-| F5 | **Login failures can't say why.** The 401 body is encrypted; the error path logs ciphertext and the UI falls back to "An error occurred. Please try again." | Verified in the deployed app |
-| F6 | **A new account lands on a broken dashboard.** `POST /api/register` writes only `users`; the student dashboard needs a `students` row and 404s without one. | Verified end-to-end |
+| F5 | **Login failures can't say why.** The 401 body is encrypted; the error path logs ciphertext and the UI falls back to "An error occurred. Please try again." | Verified in the deployed app | Fixed (T4.1–T4.3); register pending (T4.6) |
+| F6 | **A new account lands on a broken dashboard.** `POST /api/register` writes only `users`; the student dashboard needs a `students` row and 404s without one. | Verified end-to-end | Fixed for the dashboard (T4.4/T4.5); decision pending (T4.7) |
 | F7 | **Markup/a11y defects.** `<html lang="">` is empty; a duplicate `<meta name="viewport">` sits inside `HomeComponent`'s `<header>` (i.e. in the body); the dark-mode control is a `<div @click>` with no button semantics, no keyboard access and no `aria-pressed`; form inputs have no `autocomplete` hints. | Verified (files) |
 | F8 | **No local stylesheet exists.** `src/assets/` holds only `favicon.ico` and `img/`; `main.js` imports no global CSS, so every style is a utility class repeated per template. | Verified |
 | F9 | `localStorageInterceptor.js` is imported nowhere (`main.js` has it commented out); the axios interceptor attaches the token directly. Dead file. | Verified |
@@ -92,8 +130,59 @@ Each phase is independently shippable and independently verifiable.
 - New `src/assets/styles/tokens.css`: CSS custom properties for the CTU palette, spacing, radii, shadows, a type scale, and light/dark value pairs; base rules for `box-sizing`, focus-visible rings, and `.btn` / `.btn-primary` / `.card` / `.field` / `.alert` / `.spinner` / `.empty-state`; honours `prefers-reduced-motion`.
 - Import once in `src/main.js`. Purely additive — nothing changes until a view opts in.
 - Verify: the app renders identically when no new class is used.
+- **As shipped (2026-09-13):** there is no separate `tokens.css`. Everything above — tokens,
+  components and the Tailwind directives — lives in the single `src/assets/styles/app.css` imported
+  from `main.js`. The filename here is stale; the intent was met in one file.
 
-### Phase 2 — Dark mode that works
+### Phase 2 — Dark mode that works  *(mechanism decided 2026-09-13 — see T2.1)*
+
+**Decision: one switch — a `dark` class on `<html>` — driving both the token layer and Tailwind's
+`dark:` variant.** This supersedes the original wording below ("driven by `data-theme="dark"` …
+**not** Tailwind's `dark:` variant"), which described an either/or that does not exist.
+
+Measured before deciding, rather than read off the code:
+
+| Observation | Evidence |
+|---|---|
+| The token block is **not** dead code | `app.css` selects `[data-theme="dark"], .dark` — the `.dark` half is reached on every toggle |
+| Toggling re-themes the tokens | body `rgb(244,246,249)` → `rgb(22,32,44)`; text `rgb(18,41,74)` → `rgb(232,238,246)`; survives reload |
+| Both mechanisms share **one** switch | Tailwind's `darkMode: "class"` and the token block both read `html.dark` |
+| **That switch is set in exactly one component** | `HomeComponent.mounted()` is the only writer |
+
+The last row is the real defect, and it is why mechanism alone cannot fix dark mode:
+
+| Route, with `localStorage.darkMode = "true"` | `html.class` | Body |
+|---|---|---|
+| `/` | `dark` | `rgb(22,32,44)` ✅ |
+| `/login` | *(empty)* | `rgb(244,246,249)` ❌ |
+| `/student/dashboard` | *(empty)* | `rgb(244,246,249)` ❌ |
+
+A returning dark-mode user who deep-links anywhere but the home page silently gets a light page.
+
+**Decisions**
+
+1. **One switch, one name: `html.dark`.** Remove the unreachable `[data-theme="dark"],` half of the
+   selector so no dead selector ships. No `data-theme` attribute is introduced — a second switch
+   would only be a second way to be wrong. **T2.3 therefore becomes "delete the attribute half",
+   not "wire it up".** This closes B6/A2/A3.
+2. **Keep Tailwind's `dark:` variant.** Already configured, already working, and the right tool for a
+   view-local one-off. F2's shipped change stays exactly as it is.
+3. **Apply the theme at bootstrap, never in a component** (T2.2) — from `localStorage.darkMode`,
+   falling back to `prefers-color-scheme` on a first visit only (T2.6).
+4. **Scope for this milestone: the shell plus the three entry pages — 9 views:** `HomeComponent`,
+   `LoginComponent`, `RegisterComponent`, the three layouts (`AdminLayout`/`TeacherLayout`/
+   `StudentLayout`) and their three sidebars. Content views are **out of scope** and opt in later.
+5. **Coverage is a migration, not a switch.** 32 of 38 views use raw colour utilities (`bg-white`,
+   `text-gray-*`) that ignore the tokens; exactly 1 uses the token component classes. Converting all
+   32 was rejected — it is the largest diff in the plan and the easiest to leave half-done.
+
+**Open, needs an owner decision:** the only dark-mode control lives on `HomeComponent`. Under this
+scope, a logged-in user in dark mode has no way to switch back without returning to the home page.
+A toggle in the shell sidebars is a UI addition this plan does not currently authorise, so it is
+flagged rather than assumed.
+
+**Original text (superseded, kept for the record)**
+
 - Driven by `data-theme="dark"` on `<html>` plus the Phase 1 tokens — **not** Tailwind's `dark:` variant, which the CDN cannot provide.
 - Persist the choice in `localStorage`; respect `prefers-color-scheme` on first visit.
 - Replace the `<div @click>` toggle with `<button type="button" aria-pressed="…" aria-label="Toggle dark mode">` and a real focus ring.

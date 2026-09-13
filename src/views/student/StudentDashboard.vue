@@ -12,6 +12,19 @@
             <p class="text-xl text-gray-600 mt-4">Loading dashboard...</p>
           </div>
         </div>
+        <div v-else-if="profileMissing" class="max-w-2xl mx-auto mt-6">
+          <div class="empty-state">
+            <p class="empty-state-title">Your profile is not set up yet</p>
+            <p>
+              Your account exists, but it is not linked to a student record, so
+              there are no subjects, tasks or schedules to show. Ask your
+              administrator to enrol you, then reload this page.
+            </p>
+          </div>
+        </div>
+        <div v-else-if="loadError" class="max-w-2xl mx-auto mt-6">
+          <p class="alert alert-error">{{ loadError }}</p>
+        </div>
         <div v-else class="flex flex-col gap-6">
           <div class="flex flex-wrap gap-6 mt-6 justify-center">
             <div class="w-full sm:w-1/2 lg:w-1/4 xl:w-1/5">
@@ -64,7 +77,11 @@
           </div>
         </div>
       </div>
-      <div class="bg-white p-6 rounded-lg shadow-lg w-full lg:w-1/4 h-auto mt-6 lg:mt-0 lg:ml-6">
+      <!-- Same rule as the scores view: show exactly one state.  Rendering an
+           empty Schedule while the profile itself is missing would imply the
+           app looked for schedules when it never got that far. -->
+      <div v-if="!loading && !profileMissing && !loadError"
+        class="bg-white p-6 rounded-lg shadow-lg w-full lg:w-1/4 h-auto mt-6 lg:mt-0 lg:ml-6">
         <h3 class="text-xl font-semibold mb-4 text-gray-800 text-center">Schedule</h3>
         <div v-if="schedules && schedules.length">
           <ul class="space-y-4">
@@ -85,11 +102,16 @@
 </template>
 <script>
 import axios from "@/axios";
+import { apiErrorMessage } from "@/apiError";
 export default {
   name: "StudentDashboard",
   data() {
     return {
       loading: true,
+      // Set when /student/stats answers 404: the account exists but has no
+      // `students` row, so there is no profile to show figures for.
+      profileMissing: false,
+      loadError: "",
       subjectCount: 0,
       tasksGivenCount: 0,
       schedules: [],
@@ -102,7 +124,6 @@ export default {
   },
   mounted() {
     this.checkAccess();
-    this.loadDashboardData();
     this.loadStatsData();
   },
   methods: {
@@ -113,15 +134,14 @@ export default {
         return;
       }
     },
-    async loadDashboardData() {
-      try {
-        this.loading = false;
-      } catch (error) {
-        console.error("Error fetching student dashboard:", error);
-        this.$router.push("/login");
-      }
-    },
+    /* The old `loadDashboardData()` lived here.  It fetched nothing — it only
+       set `loading = false` — so the loading state ended before the request it
+       appeared to be waiting on had even started.  `loadStatsData()` now owns
+       that flag via `finally`. */
     async loadStatsData() {
+      this.loading = true;
+      this.profileMissing = false;
+      this.loadError = "";
       try {
         const response = await axios.get("/student/stats");
         this.subjectCount = response.data.subjectCount;
@@ -135,7 +155,19 @@ export default {
         this.stats.totalSubjects = response.data.subjectCount;
         this.stats.totalTasks = response.data.taskGivenCount;
       } catch (error) {
-        console.error("Error fetching stats:", error);
+        if (error.response && error.response.status === 404) {
+          // Registering creates a `users` row but no `students` row, and this
+          // endpoint 404s when there is none.  Zeros would look like real
+          // figures, so say what is actually happening instead.
+          this.profileMissing = true;
+        } else {
+          this.loadError = apiErrorMessage(
+            error,
+            "We couldn't load your dashboard. Please try again later.",
+          );
+        }
+      } finally {
+        this.loading = false;
       }
     },
     async logout() {
