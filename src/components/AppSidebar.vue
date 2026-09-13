@@ -343,6 +343,11 @@ export default {
   background: var(--sidebar-bg);
   color: var(--sidebar-text);
   border-right: 1px solid var(--sidebar-border);
+/* Vertical scrolling only, stated explicitly: `overflow-y: auto` alone forces
+     the other axis to `auto` as well, so anything wider than the rail shows a
+     horizontal scrollbar instead of being clipped.  A nav rail should never
+     scroll sideways. */
+    overflow-x: hidden;
   overflow-y: auto;
   /* Drawer: off-canvas until opened. */
   position: fixed;
@@ -397,6 +402,12 @@ export default {
   }
 
   .sidebar--rail .sidebar__head {
+    /* Stacked, not side by side.  As a row the avatar (2.5rem) and the
+           collapse control (2.5rem) need 40 + 12 + 40 = 92px, while the rail's
+           content box is only 43px — so the row overflowed its container.  That
+           surfaced as a horizontal scrollbar along the bottom of the rail, because
+           `overflow-y: auto` also makes the other axis `auto`. */
+        flex-direction: column;
     justify-content: center;
   }
 
