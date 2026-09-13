@@ -12,12 +12,8 @@
     <div class="toolbar">
       <div class="toolbar__group">
         <button
-          type="button"
-          class="btn btn-primary"
-          :aria-expanded="showForm ? 'true' : 'false'"
-          aria-controls="schedule-form"
-          @click="toggleForm"
-        >
+type="button" class="btn btn-primary" :aria-expanded="showForm ? 'true' : 'false'"
+          aria-controls="schedule-form" @click="toggleForm">
           {{ showForm ? "Close form" : "Add a schedule" }}
         </button>
       </div>
@@ -43,8 +39,7 @@
 
     <div
       v-if="showForm"
-      id="schedule-form"
-      class="card card-pad form-narrow stack"
+id="schedule-form" class="card card-pad form-narrow stack"
     >
       <h2 class="section-title">
         {{ isEditing ? "Edit schedule" : "New schedule" }}
@@ -67,53 +62,34 @@
 
           <div>
             <label class="form-label" for="room_name">Room</label>
-            <input
-              id="room_name"
-              v-model="form.room"
-              class="form-field"
-              type="text"
-              placeholder="e.g. Computer Lab 1"
+            <input id="room_name" v-model="form.room" class="form-field" type="text" placeholder="e.g. Computer Lab 1"
               required
-            />
+/>
           </div>
 
           <div>
             <label class="form-label" for="time_in">Time in</label>
-            <input
-              id="time_in"
-              v-model="form.time_in"
-              class="form-field"
-              type="time"
-              required
-            />
+            <input id="time_in" v-model="form.time_in"
+class="form-field"
+type="time"
+required />
           </div>
 
           <div>
             <label class="form-label" for="time_out">Time out</label>
-            <input
-              id="time_out"
-              v-model="form.time_out"
-              class="form-field"
-              type="time"
-              required
-            />
+            <input id="time_out" v-model="form.time_out"
+class="form-field"
+type="time"
+required />
           </div>
         </div>
 
         <div>
           <label class="form-label" for="teacher">Teacher</label>
-          <select
-            id="teacher"
-            v-model="form.teacher_id"
-            class="form-field"
-            required
-          >
+          <select id="teacher" v-model="form.teacher_id"
+class="form-field" required>
             <option value="" disabled>Select a teacher</option>
-            <option
-              v-for="teacher in teachers"
-              :key="teacher.id"
-              :value="teacher.id"
-            >
+            <option v-for="teacher in teachers" :key="teacher.id" :value="teacher.id">
               {{ teacher.name }}
             </option>
           </select>
@@ -134,13 +110,8 @@
 
     <p v-if="loading" class="sr-only" role="status">Loading schedules…</p>
 
-    <PanelCard
-      v-else-if="!loadError"
-      title="Scheduled sessions"
-      :empty="!schedules.length"
-      empty-title="Nothing scheduled yet"
-      empty-text="Add a schedule to reserve the computer lab for a class."
-    >
+    <PanelCard v-else-if="!loadError" title="Scheduled sessions" :empty="!schedules.length"
+      empty-title="Nothing scheduled yet" empty-text="Add a schedule to reserve the computer lab for a class.">
       <ul class="record-list">
         <li v-for="schedule in schedules" :key="schedule.id" class="record">
           <div>
@@ -162,16 +133,13 @@
           </div>
           <div class="record__actions">
             <button
-              type="button"
-              class="action-link"
+type="button" class="action-link"
               @click="editSchedule(schedule)"
             >
               Edit
             </button>
             <button
-              type="button"
-              class="action-link action-link--danger"
-              @click="askDelete(schedule)"
+type="button" class="action-link action-link--danger" @click="askDelete(schedule)"
             >
               Delete
             </button>
@@ -180,15 +148,8 @@
       </ul>
     </PanelCard>
 
-    <ModalPopup
-      :is-visible="showModal"
-      tone="danger"
-      title="Delete this schedule?"
-      confirm-label="Delete"
-      :message="deleteMessage"
-      @confirm="confirmDelete"
-      @cancel="cancelDelete"
-    />
+    <ModalPopup :is-visible="showModal" tone="danger" title="Delete this schedule?" confirm-label="Delete"
+      :message="deleteMessage" @confirm="confirmDelete" @cancel="cancelDelete" />
   </div>
 </template>
 

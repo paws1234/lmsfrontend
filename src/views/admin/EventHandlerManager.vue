@@ -11,13 +11,8 @@
 
     <div class="toolbar">
       <div class="toolbar__group">
-        <button
-          type="button"
-          class="btn btn-primary"
-          :aria-expanded="showForm ? 'true' : 'false'"
-          aria-controls="event-form"
-          @click="toggleForm"
-        >
+        <button type="button" class="btn btn-primary" :aria-expanded="showForm ? 'true' : 'false'"
+          aria-controls="event-form" @click="toggleForm">
           {{ showForm ? "Close form" : "Add an event" }}
         </button>
       </div>
@@ -30,10 +25,7 @@
     <p v-if="loadError" class="alert alert-error" role="alert">
       {{ loadError }}
       <button
-        type="button"
-        class="btn btn-ghost alert__action"
-        @click="fetchEventHandlers"
-      >
+type="button" class="btn btn-ghost alert__action" @click="fetchEventHandlers">
         Try again
       </button>
     </p>
@@ -44,8 +36,7 @@
 
     <div
       v-if="showForm"
-      id="event-form"
-      class="card card-pad form-narrow stack"
+id="event-form" class="card card-pad form-narrow stack"
     >
       <h2 class="section-title">
         {{ isEditing ? "Edit event" : "New event" }}
@@ -54,37 +45,27 @@
       <form class="form" @submit.prevent="saveEventHandler">
         <div>
           <label class="form-label" for="name">Name</label>
-          <input
-            id="name"
-            v-model="form.name"
-            class="form-field"
-            type="text"
-            placeholder="e.g. Midterm examinations"
-            required
-          />
+          <input id="name" v-model="form.name"
+class="form-field"
+type="text"
+placeholder="e.g. Midterm examinations"
+            required />
         </div>
 
         <div>
           <label class="form-label" for="description">Description</label>
-          <textarea
-            id="description"
-            v-model="form.description"
-            class="form-field"
-            rows="4"
-            placeholder="What students and teachers need to know"
-            required
-          ></textarea>
+          <textarea id="description" v-model="form.description"
+class="form-field"
+rows="4"
+            placeholder="What students and teachers need to know" required></textarea>
         </div>
 
         <div>
           <label class="form-label" for="event_date">Date</label>
-          <input
-            id="event_date"
-            v-model="form.date"
-            class="form-field"
-            type="date"
-            required
-          />
+          <input id="event_date" v-model="form.date"
+class="form-field"
+type="date"
+required />
         </div>
 
         <div class="form-actions">
@@ -100,18 +81,13 @@
 
     <p v-if="loading" class="sr-only" role="status">Loading events…</p>
 
-    <PanelCard
-      v-else-if="!loadError"
-      title="All events"
-      :empty="!eventHandlers.length"
-      empty-title="No events yet"
-      empty-text="Add the first event and it will appear on every dashboard."
-    >
+    <PanelCard v-else-if="!loadError" title="All events" :empty="!eventHandlers.length" empty-title="No events yet"
+      empty-text="Add the first event and it will appear on every dashboard.">
       <ul class="record-list">
         <li
           v-for="eventHandler in eventHandlers"
           :key="eventHandler.id"
-          class="record"
+class="record"
         >
           <div>
             <h3 class="record__title">{{ eventHandler.name }}</h3>
@@ -120,24 +96,17 @@
             </p>
           </div>
           <div class="record__actions">
-            <time
-              v-if="eventHandler.date"
-              :datetime="eventHandler.date"
-              class="badge"
-            >
+            <time v-if="eventHandler.date" :datetime="eventHandler.date" class="badge">
               {{ formatDate(eventHandler.date) }}
             </time>
             <button
-              type="button"
-              class="action-link"
+type="button" class="action-link"
               @click="editEventHandler(eventHandler)"
             >
               Edit
             </button>
             <button
-              type="button"
-              class="action-link action-link--danger"
-              @click="askDelete(eventHandler)"
+type="button" class="action-link action-link--danger" @click="askDelete(eventHandler)"
             >
               Delete
             </button>
@@ -146,15 +115,8 @@
       </ul>
     </PanelCard>
 
-    <ModalPopup
-      :is-visible="showModal"
-      tone="danger"
-      title="Delete this event?"
-      confirm-label="Delete"
-      :message="deleteMessage"
-      @confirm="confirmDelete"
-      @cancel="cancelDelete"
-    />
+    <ModalPopup :is-visible="showModal" tone="danger" title="Delete this event?" confirm-label="Delete"
+      :message="deleteMessage" @confirm="confirmDelete" @cancel="cancelDelete" />
   </div>
 </template>
 
@@ -296,10 +258,10 @@ export default {
     const formatDate = (value) => {
       const date = DATE_ONLY.test(value)
         ? new Date(
-            Number(value.slice(0, 4)),
-            Number(value.slice(5, 7)) - 1,
-            Number(value.slice(8, 10)),
-          )
+          Number(value.slice(0, 4)),
+          Number(value.slice(5, 7)) - 1,
+          Number(value.slice(8, 10)),
+        )
         : new Date(value);
       return Number.isNaN(date.getTime()) ? value : DATE_FORMAT.format(date);
     };
@@ -340,3 +302,4 @@ export default {
   },
 };
 </script>
+

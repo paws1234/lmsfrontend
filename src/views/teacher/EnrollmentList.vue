@@ -11,16 +11,12 @@
 
     <div class="toolbar">
       <div class="toolbar__group">
-        <label class="sr-only" for="enrollment-search"
-          >Search enrollments</label
-        >
+        <label class="sr-only" for="enrollment-search">Search enrollments</label>
         <input
-          id="enrollment-search"
-          v-model="searchQuery"
-          class="form-field search"
-          type="search"
-          placeholder="Search by student or subject"
-        />
+id="enrollment-search"
+v-model="searchQuery"
+class="form-field search" type="search"
+          placeholder="Search by student or subject" />
       </div>
       <div class="toolbar__group">
         <router-link class="btn btn-primary" to="/teacher/enrollments/create">
@@ -44,22 +40,14 @@
       {{ actionError }}
     </p>
 
-    <PanelCard
-      v-if="!loadError"
-      title="All enrollments"
-      :loading="loading"
-      :empty="!filteredEnrollments.length"
-      :empty-title="
-        hasEnrollments
+    <PanelCard v-if="!loadError" title="All enrollments" :loading="loading" :empty="!filteredEnrollments.length"
+      :empty-title="hasEnrollments
           ? 'No enrollments match your search'
           : 'Nobody is enrolled yet'
-      "
-      :empty-text="
-        hasEnrollments
+        " :empty-text="hasEnrollments
           ? 'Try a different word, or clear the search box.'
           : 'Enrol a student into a subject to get started.'
-      "
-    >
+        ">
       <div class="table-wrap">
         <table class="table enrollment-table">
           <thead>
@@ -75,17 +63,11 @@
               <td>{{ enrollment.subject.title }}</td>
               <td>
                 <button
-                  type="button"
-                  class="action-link"
-                  @click="editEnrollment(enrollment)"
-                >
+type="button" class="action-link" @click="editEnrollment(enrollment)">
                   Edit
                 </button>
                 <button
-                  type="button"
-                  class="action-link action-link--danger"
-                  @click="askDelete(enrollment)"
-                >
+type="button" class="action-link action-link--danger" @click="askDelete(enrollment)">
                   Delete
                 </button>
               </td>
@@ -97,21 +79,16 @@
 
     <!-- Edit dialog.  The two selects are the whole form, so the dialog's own
          confirming button is the submit action. -->
-    <ModalPopup
-      :is-visible="editingEnrollment"
-      title="Edit enrollment"
-      confirm-label="Save changes"
-      :message="editMessage"
-      @confirm="updateEnrollment"
-      @cancel="cancelEdit"
+    <ModalPopup :is-visible="editingEnrollment" title="Edit enrollment" confirm-label="Save changes"
+      :message="editMessage" @confirm="updateEnrollment" @cancel="cancelEdit"
     >
       <div class="form">
         <div>
           <label class="form-label" for="edit-student">Student</label>
           <select
-            id="edit-student"
+id="edit-student"
             v-model="form.student_id"
-            class="form-field"
+class="form-field"
             @change="updateStudentName"
           >
             <option
@@ -126,9 +103,9 @@
         <div>
           <label class="form-label" for="edit-subject">Subject</label>
           <select
-            id="edit-subject"
+id="edit-subject"
             v-model="form.subject_id"
-            class="form-field"
+class="form-field"
             @change="updateSubjectTitle"
           >
             <option
@@ -143,15 +120,8 @@
       </div>
     </ModalPopup>
 
-    <ModalPopup
-      :is-visible="showModal"
-      tone="danger"
-      title="Delete this enrollment?"
-      confirm-label="Delete"
-      :message="deleteMessage"
-      @confirm="confirmDelete"
-      @cancel="cancelDelete"
-    />
+    <ModalPopup :is-visible="showModal" tone="danger" title="Delete this enrollment?" confirm-label="Delete"
+      :message="deleteMessage" @confirm="confirmDelete" @cancel="cancelDelete" />
   </div>
 </template>
 

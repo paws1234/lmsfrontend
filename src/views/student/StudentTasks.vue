@@ -11,11 +11,7 @@
 
     <p v-if="loadError" class="alert alert-error" role="alert">
       {{ loadError }}
-      <button
-        type="button"
-        class="btn btn-ghost alert__action"
-        @click="fetchTasks"
-      >
+      <button type="button" class="btn btn-ghost alert__action" @click="fetchTasks">
         Try again
       </button>
     </p>
@@ -28,47 +24,26 @@
 
     <template v-else>
       <div class="tabs" role="tablist" aria-label="Your work">
-        <button
-          id="tab-todos"
-          type="button"
-          role="tab"
-          class="tabs__tab"
-          :aria-selected="activeView === 'todos' ? 'true' : 'false'"
-          aria-controls="panel-todos"
-          @click="toggleView('todos')"
-        >
+        <button id="tab-todos" type="button" role="tab" class="tabs__tab"
+          :aria-selected="activeView === 'todos' ? 'true' : 'false'" aria-controls="panel-todos"
+          @click="toggleView('todos')">
           Tasks
         </button>
-        <button
-          id="tab-questions"
-          type="button"
-          role="tab"
-          class="tabs__tab"
-          :aria-selected="activeView === 'questions' ? 'true' : 'false'"
-          aria-controls="panel-questions"
-          @click="toggleView('questions')"
-        >
+        <button id="tab-questions" type="button" role="tab" class="tabs__tab"
+          :aria-selected="activeView === 'questions' ? 'true' : 'false'" aria-controls="panel-questions"
+          @click="toggleView('questions')">
           Questions
         </button>
       </div>
 
-      <section
-        v-show="activeView === 'todos'"
-        id="panel-todos"
-        role="tabpanel"
-        aria-labelledby="tab-todos"
-        class="stack"
-      >
+      <section v-show="activeView === 'todos'" id="panel-todos" role="tabpanel" aria-labelledby="tab-todos"
+        class="stack">
         <div v-if="!todoGroups.length" class="empty-state">
           <p class="empty-state-title">No tasks yet</p>
           <p>Tasks your teachers set for your subjects appear here.</p>
         </div>
 
-        <PanelCard
-          v-for="group in todoGroups"
-          :key="group.subjectId"
-          :title="group.subjectTitle"
-        >
+        <PanelCard v-for="group in todoGroups" :key="group.subjectId" :title="group.subjectTitle">
           <div v-for="day in group.dates" :key="day.date" class="day">
             <h3 class="day__date">Posted {{ day.date }}</h3>
             <ul class="task-list">
@@ -79,24 +54,10 @@
                 </p>
 
                 <div v-if="todo.file" class="task__attachment">
-                  <img
-                    v-if="isImage(todo.file)"
-                    :src="todo.file"
-                    alt="Attachment preview"
-                    class="task__image"
-                  />
-                  <iframe
-                    v-else-if="isPDF(todo.file) || isTextFile(todo.file)"
-                    :src="todo.file"
-                    title="Attachment"
-                    class="task__frame"
-                  ></iframe>
-                  <button
-                    v-else
-                    type="button"
-                    class="btn btn-ghost"
-                    @click="downloadFile(todo.file)"
-                  >
+                  <img v-if="isImage(todo.file)" :src="todo.file" alt="Attachment preview" class="task__image" />
+                  <iframe v-else-if="isPDF(todo.file) || isTextFile(todo.file)" :src="todo.file" title="Attachment"
+                    class="task__frame"></iframe>
+                  <button v-else type="button" class="btn btn-ghost" @click="downloadFile(todo.file)">
                     Download attachment
                   </button>
                 </div>
@@ -106,61 +67,39 @@
         </PanelCard>
       </section>
 
-      <section
-        v-show="activeView === 'questions'"
-        id="panel-questions"
-        role="tabpanel"
-        aria-labelledby="tab-questions"
-        class="stack"
-      >
+      <section v-show="activeView === 'questions'" id="panel-questions" role="tabpanel" aria-labelledby="tab-questions"
+        class="stack">
         <div v-if="!questionGroups.length" class="empty-state">
           <p class="empty-state-title">No questions yet</p>
           <p>Forms your teachers publish for your subjects appear here.</p>
         </div>
 
-        <PanelCard
-          v-for="group in questionGroups"
-          :key="group.subjectId"
-          :title="group.subjectTitle"
-        >
+        <PanelCard v-for="group in questionGroups" :key="group.subjectId" :title="group.subjectTitle">
           <div v-for="day in group.dates" :key="day.date" class="day">
             <!-- One button per day, at the day level: the dialog submits a
                  whole day's answers, so per-question buttons asked the same
                  question several times. -->
             <div class="day__head">
               <h3 class="day__date">Posted {{ day.date }}</h3>
-              <button
-                type="button"
-                class="btn btn-primary"
-                @click="openAnswerModal(day)"
-              >
+              <button type="button" class="btn btn-primary" @click="openAnswerModal(day)">
                 Answer these questions
               </button>
             </div>
 
             <ul class="task-list">
-              <li
-                v-for="question in day.items"
-                :key="question.question_id"
-                :data-question-id="question.question_id"
-                class="task"
-              >
+              <li v-for="question in day.items" :key="question.question_id" :data-question-id="question.question_id"
+                class="task">
                 <h4 class="task__title">{{ question.question_text }}</h4>
                 <p class="record__meta">
                   {{ question.points }}
                   {{ question.points === 1 ? "point" : "points" }}
                 </p>
 
-                <ul
-                  v-if="question.answers && question.answers.length"
-                  class="answer-list"
-                >
+                <ul v-if="question.answers && question.answers.length" class="answer-list">
                   <li
-                    v-for="answer in question.answers"
-                    :key="answer.id"
-                    :data-answer-id="answer.id"
-                    class="answer"
-                  >
+v-for="answer in question.answers" :key="answer.id" :data-answer-id="answer.id"
+class="answer"
+>
                     {{ answer.answer_text }}
                   </li>
                 </ul>
@@ -171,39 +110,24 @@
       </section>
     </template>
 
-    <ModalPopup
-      :is-visible="isModalOpen"
-      title="Submit your answers"
-      confirm-label="Submit answers"
-      @confirm="submitAnswers"
-      @cancel="closeModal"
-    >
+    <ModalPopup :is-visible="isModalOpen" title="Submit your answers" confirm-label="Submit answers"
+      @confirm="submitAnswers" @cancel="closeModal">
       <p v-if="submitError" class="form-error" role="alert">
         {{ submitError }}
       </p>
 
       <form class="form" @submit.prevent="submitAnswers">
-        <fieldset
-          v-for="(question, index) in modalQuestions"
-          :key="question.question_id"
-          class="choice-set"
-        >
+        <fieldset v-for="(question, index) in modalQuestions" :key="question.question_id" class="choice-set">
           <legend class="choice-set__legend">
             {{ question.question_text }}
           </legend>
 
-          <label
-            v-for="answer in question.answers"
-            :key="answer.id"
-            class="choice"
-          >
+          <label v-for="answer in question.answers" :key="answer.id" class="choice">
             <input
-              v-model="selectedAnswers[question.question_id]"
-              type="radio"
-              :name="'answer_' + index"
+v-model="selectedAnswers[question.question_id]"
+type="radio" :name="'answer_' + index"
               :value="answer.id"
-              class="choice__input"
-            />
+class="choice__input" />
             <span>{{ answer.answer_text }}</span>
           </label>
         </fieldset>
@@ -383,7 +307,7 @@ export default {
 }
 
 /* A day is a labelled block inside a subject panel. */
-.day + .day {
+.day+.day {
   margin-top: var(--space-6);
 }
 
@@ -457,11 +381,9 @@ export default {
   padding: 0;
   border: 0;
 }
-
-.choice-set + .choice-set {
+.choice-set+.choice-set {
   margin-top: var(--space-4);
 }
-
 .choice-set__legend {
   font-weight: 600;
   color: var(--text);
