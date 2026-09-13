@@ -140,6 +140,29 @@ Sizing: **S** ≤ 30 min · **M** ≈ 1 h · **L** ≈ 2 h. `→` = depends on. 
 | T5.6 | Delete `src/localStorageInterceptor.js` and the stale comment in `main.js` | S | — | G: file gone, zero references |
 | T5.7 | Confirm the token flow still works after T5.6 (login → authenticated request) | S | T5.6 | C: `/student/stats` returns 200, not 401 |
 
+**T5.2–T5.4 done for the three dashboards, 2026-09-13.** The shared page rhythm (`.page`,
+`.page__head`, `.page__eyebrow`, `.page__title`, `.page__lead`, `.page__tiles`, `.page__split`) now
+lives in `app.css`, and three components carry the repeated markup: `StatCard.vue` (label + figure +
+icon, optionally a link to the list page), `PanelCard.vue` (titled card with a header action, a
+skeleton state and an empty state) and `EventList.vue` (name, description, date chip). The icon paths
+moved out of `AppSidebar.vue` into `src/icons.js`, so the tiles and the sidebar can no longer drift.
+Each dashboard's own `p-6`, `bg-blue-50` page wash, `min-h-screen`, absolutely-positioned seal (which
+never had a positioned ancestor) and its 40-line bespoke `.loader` are gone; the loading state is the
+`.skeleton` shimmer the rest of the app already uses.
+
+Measured, not assumed. Real data on all three roles, plus stubbed full states: **0 WCAG failures** over
+24 / 22 / 28 text-bearing elements in **both** themes, with a deliberately bad element injected first to
+prove the walker flags it; `scrollWidth − clientWidth` is 0 at 1440 / 768 / 390; tiles are one row of
+three at ≥768 and stacked at 390; the student page splits 698 / 466 px at 1440 and stacks below that; no
+console errors on any of the three.
+
+Behaviour changes (all presentation-side, no API change): a failed totals request now renders `—` and a
+retry alert instead of a silent `0`; the teacher dashboard's dead `/teacher/dashboard` call — which
+pushed to `/login` on *any* error — is removed; a teacher without a `teachers` row gets the same
+"profile is not set up yet" panel the student dashboard already had. Lint went 702 → 555 warnings, 0
+errors. Still open: the other ~29 views do not use `.page` yet, so the header/padding rhythm is unified
+across the dashboards only.
+
 ### T6 — Phase 7 verification pass
 
 | ID | Task | Size | → | Evidence |

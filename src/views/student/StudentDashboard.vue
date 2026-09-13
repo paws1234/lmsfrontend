@@ -1,113 +1,72 @@
 <template>
-  <div class="bg-blue-50">
-    <div class="min-h-screen flex flex-col lg:flex-row p-6">
-      <div class="flex-1 lg:pl-40 md:pl-32 sm:pl-28 pl-6">
-        <div class="absolute top-8 sm:left-24 sm:top-5 md:left-40 md:top-3 lg:left-80 lg:top-8">
-          <img class="hidden sm:block h-16" src="@/assets/img/clogo.jpg" alt="University Logo" />
-        </div>
-        <h2 class="text-3xl font-bold mb-6 text-center text-blue-900">Student Dashboard</h2>
-        <div v-if="loading" class="flex flex-col items-center justify-center h-64">
-          <div class="loader-container">
-            <div class="loader"></div>
-            <p class="text-xl text-gray-600 mt-4">Loading dashboard...</p>
-          </div>
-        </div>
-        <div v-else-if="profileMissing" class="max-w-2xl mx-auto mt-6">
-          <div class="empty-state">
-            <p class="empty-state-title">Your profile is not set up yet</p>
-            <p>
-              Your account exists, but it is not linked to a student record, so
-              there are no subjects, tasks or schedules to show. Ask your
-              administrator to enrol you, then reload this page.
-            </p>
-          </div>
-        </div>
-        <div v-else-if="loadError" class="max-w-2xl mx-auto mt-6">
-          <p class="alert alert-error">{{ loadError }}</p>
-        </div>
-        <div v-else class="flex flex-col gap-6">
-          <div class="flex flex-wrap gap-6 mt-6 justify-center">
-            <div class="w-full sm:w-1/2 lg:w-1/4 xl:w-1/5">
-              <div class="bg-white p-6 rounded-lg shadow-lg flex items-center space-x-4 justify-center">
-                <div class="flex-shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 mr-2 text-blue-500" fill="none"
-                    viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M12 11a4 4 0 110-8 4 4 0 010 8zm-2 1v2a4 4 0 018 0v2M5.5 20.5h13" />
-                  </svg>
-                </div>
-                <div>
-                  <h3 class="text-xl font-semibold mb-2 text-gray-800">Subjects Offered</h3>
-                  <p class="text-2xl font-bold text-gray-900">{{ subjectCount }}</p>
-                </div>
-              </div>
-            </div>
-            <div class="w-full sm:w-1/2 lg:w-1/4 xl:w-1/5">
-              <div class="bg-white p-6 rounded-lg shadow-lg flex items-center space-x-4 justify-center">
-                <div class="flex-shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 mr-2 text-blue-500" fill="none"
-                    viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M5.121 19.121A1.5 1.5 0 015.5 17H18.5a1.5 1.5 0 01.379 2.121M15 7A3 3 0 1111 7m4 0a4 4 0 00-8 0m4 8a5.5 5.5 0 00-6 0" />
-                  </svg>
-                </div>
-                <div>
-                  <h3 class="text-xl font-semibold mb-2 text-gray-800">Tasks Given</h3>
-                  <p class="text-2xl font-bold text-gray-900">{{ tasksGivenCount }}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="grid grid-cols-1 lg:grid-cols-12 mt-6">
-            <div class="bg-white p-6 rounded-lg shadow-lg lg:col-start-3 lg:col-span-10">
-              <h3 class="text-xl font-semibold mb-4 text-gray-800 text-center">Upcoming Events</h3>
-              <div v-if="events && events.length">
-                <ul class="space-y-4">
-                  <li v-for="event in events" :key="event.id" class="p-4 border-b border-gray-200">
-                    <h4 class="text-lg font-semibold text-blue-800">{{ event.name }}</h4>
-                    <p class="text-blue-900">
-                      Description: {{ event.description }}<br />
-                      Date: {{ event.date }}
-                    </p>
-                  </li>
-                </ul>
-              </div>
-              <p v-else class="text-gray-600 text-lg font-medium text-center mt-6">No events scheduled.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-      <!-- Show exactly one state, same rule as the scores view.  Rendering an
-           empty Schedule while the profile itself is missing would imply the
-           app looked for schedules when it never got that far. -->
-      <div
-        v-if="!loading && !profileMissing && !loadError"
-        class="bg-white p-6 rounded-lg shadow-lg w-full lg:w-1/4 h-auto mt-6 lg:mt-0 lg:ml-6"
-      >
-        <h3 class="text-xl font-semibold mb-4 text-gray-800 text-center">Schedule</h3>
-        <div v-if="schedules && schedules.length">
-          <ul class="space-y-4">
-            <li v-for="schedule in schedules" :key="schedule.id" class="p-4 border-b border-gray-200">
-              <h4 class="text-lg font-semibold text-blue-800">{{ schedule.title }}</h4>
-              <p class="text-blue-900">
-                Teacher Name: {{ schedule.name }}<br />
-                Description: {{ schedule.description }}<br />
-                Schedule: {{ schedule.schedule }}<br />
+  <div class="page">
+    <header class="page__head">
+      <p class="page__eyebrow">Student portal</p>
+      <h1 class="page__title">Student Dashboard</h1>
+      <p class="page__lead">
+        Your subjects, the work assigned to you and what is coming up.
+      </p>
+    </header>
+
+    <p v-if="loading" class="sr-only" role="status">Loading dashboard…</p>
+
+    <!-- Exactly one state is on screen, the same rule the scores view follows:
+         a "no profile" panel beside empty tiles would imply figures had been
+         counted when the lookup never got that far. -->
+    <PanelCard v-if="profileMissing" :empty="true" empty-title="Your profile is not set up yet"
+      empty-text="Your account exists, but it is not linked to a student record, so there are no subjects, tasks or schedules to show. Ask your administrator to enrol you, then reload this page." />
+
+    <p v-else-if="loadError" class="alert alert-error" role="alert">
+      {{ loadError }}
+      <button type="button" class="btn btn-ghost alert__action" @click="loadStatsData">
+        Try again
+      </button>
+    </p>
+
+    <template v-else>
+      <section class="page__tiles" aria-label="Totals">
+        <StatCard label="Enrolled subjects" icon="book" :value="subjectCount" :loading="loading"
+          to="/student/studentlists" />
+        <StatCard label="Tasks given" icon="tasks" :value="tasksGivenCount" :loading="loading" to="/student/tasks" />
+        <StatCard label="Scheduled subjects" icon="clock" :value="schedules.length" :loading="loading" />
+      </section>
+
+      <div class="page__split">
+        <PanelCard title="Upcoming events" :loading="loading" :empty="!events.length" empty-title="No events scheduled"
+          empty-text="School events appear here as soon as an administrator adds them.">
+          <EventList :events="events" />
+        </PanelCard>
+        <PanelCard title="Your schedule" :loading="loading" :empty="!schedules.length" empty-title="No schedules yet"
+          empty-text="A subject appears here once it has a schedule and you are enrolled in it.">
+          <ul class="schedule">
+            <li v-for="schedule in schedules" :key="schedule.id" class="schedule__item">
+              <h3 class="schedule__title">{{ schedule.title }}</h3>
+              <dl class="schedule__facts">
+                <dt>Teacher</dt>
+                <dd>{{ schedule.name }}</dd>
+                <dt>Schedule</dt>
+                <dd>{{ schedule.schedule }}</dd>
+              </dl>
+              <p v-if="schedule.description" class="schedule__description">
+                {{ schedule.description }}
               </p>
             </li>
           </ul>
-        </div>
-        <p v-else class="text-gray-600 text-lg font-medium text-center mt-6">No schedules available.</p>
+        </PanelCard>
       </div>
-    </div>
+    </template>
   </div>
 </template>
 <script>
 import axios from "@/axios";
 import { apiErrorMessage } from "@/apiError";
-import { performLogout } from "@/logout";
+import StatCard from "@/components/StatCard.vue";
+import PanelCard from "@/components/PanelCard.vue";
+import EventList from "@/components/EventList.vue";
+
 export default {
   name: "StudentDashboard",
+  components: { StatCard, PanelCard, EventList },
   data() {
     return {
       loading: true,
@@ -119,10 +78,6 @@ export default {
       tasksGivenCount: 0,
       schedules: [],
       events: [],
-      stats: {
-        totalSubjects: 0,
-        totalTasks: 0,
-      },
     };
   },
   mounted() {
@@ -140,7 +95,8 @@ export default {
     /* The old `loadDashboardData()` lived here.  It fetched nothing — it only
        set `loading = false` — so the loading state ended before the request it
        appeared to be waiting on had even started.  `loadStatsData()` now owns
-       that flag via `finally`. */
+       that flag via `finally`.  The `stats` object it used to fill is gone too:
+       nothing ever rendered it. */
     async loadStatsData() {
       this.loading = true;
       this.profileMissing = false;
@@ -149,14 +105,8 @@ export default {
         const response = await axios.get("/student/stats");
         this.subjectCount = response.data.subjectCount;
         this.tasksGivenCount = response.data.taskGivenCount;
-        if (response.data.events) {
-          this.events = response.data.events;
-        }
-        if (response.data.scheduleCount && response.data.scheduleCount.length) {
-          this.schedules = response.data.scheduleCount;
-        }
-        this.stats.totalSubjects = response.data.subjectCount;
-        this.stats.totalTasks = response.data.taskGivenCount;
+        this.events = response.data.events || [];
+        this.schedules = response.data.scheduleCount || [];
       } catch (error) {
         if (error.response && error.response.status === 404) {
           // Registering creates a `users` row but no `students` row, and this
@@ -173,54 +123,53 @@ export default {
         this.loading = false;
       }
     },
-    logout() {
-      performLogout(this.$router);
-    },
   },
 };
 </script>
 <style scoped>
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-
-  100% {
-    transform: rotate(360deg);
-  }
+.schedule {
+  display: flex;
+  flex-direction: column;
 }
 
-@keyframes pulse {
-  0% {
-    opacity: 0.5;
-  }
-
-  50% {
-    opacity: 1;
-  }
-
-  100% {
-    opacity: 0.5;
-  }
+/* Dividers belong between rows, so the first row has none. */
+.schedule__item {
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--border);
 }
 
-.loader-container {
-  text-align: center;
+.schedule__item:first-child {
+  padding-top: 0;
+  border-top: 0;
 }
 
-.loader {
-  border: 8px solid #f3f3f3;
-  border-top: 8px solid #3498db;
-  border-radius: 50%;
-  width: 80px;
-  height: 80px;
-  animation: spin 1.5s linear infinite;
-  margin: 0 auto;
+.schedule__title {
+  font-size: var(--step-0);
+  font-weight: 600;
+  color: var(--text);
 }
 
-.loader-container p {
-  margin-top: 1rem;
-  font-weight: 500;
-  animation: pulse 1.5s infinite;
+/* Term beside value, so a column of values lines up under itself. */
+.schedule__facts {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-1) var(--space-3);
+  margin-top: var(--space-2);
+  font-size: var(--step--1);
+}
+
+.schedule__facts dt {
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.schedule__facts dd {
+  margin: 0;
+  color: var(--text);
+}
+
+.schedule__description {
+  margin-top: var(--space-2);
+  color: var(--text-muted);
 }
 </style>

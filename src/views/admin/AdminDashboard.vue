@@ -1,210 +1,114 @@
 <template>
-<div class=" bg-blue-50">
-  <div class="min-h-screen flex flex-col p-6">
+  <div class="page">
+    <header class="page__head">
+      <p class="page__eyebrow">Institution overview</p>
+      <h1 class="page__title">Admin Dashboard</h1>
+      <p class="page__lead">
+        Totals across the school, and what is coming up on the calendar.
+      </p>
+    </header>
 
-<div class="absolute top-8 sm:left-24 sm:top-5 md:left-40 md:top-3 lg:left-80 lg:top-8">
-  <img class=" hidden sm:block h-16" src="@/assets/img/clogo.jpg" alt="University Logo" />
-</div>
-    <h2 class="text-3xl font-bold mb-6 text-center text-blue-900">
-      Admin Dashboard
-    </h2>
+    <p v-if="loading" class="sr-only" role="status">Loading dashboard…</p>
 
-    <div v-if="loading" class="flex flex-col items-center justify-center h-64">
-      <div class="loader-container">
-        <div class="loader"></div>
-        <p class="text-xl text-gray-600 mt-4">Loading dashboard...</p>
-      </div>
-    </div>
+    <p v-if="statsError" class="alert alert-error" role="alert">
+      {{ statsError }}
+      <button type="button" class="btn btn-ghost alert__action" @click="fetchData">
+        Try again
+      </button>
+    </p>
 
-    <div v-else class="flex flex-col gap-6 ">
-      <div class="flex flex-wrap gap-6 mt-6 justify-center ">
-        <div class="w-full sm:w-1/2 lg:w-1/4">
-          <div class="bg-white p-6 rounded-lg shadow-lg flex items-center space-x-4">
-            <div class="flex-shrink-0">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="w-6 h-6 mr-2"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M5.121 19.121A1.5 1.5 0 015.5 17H18.5a1.5 1.5 0 01.379 2.121M15 7A3 3 0 1111 7m4 0a4 4 0 00-8 0m4 8a5.5 5.5 0 00-6 0"
-                />
-              </svg>
-            </div>
-            <div>
-              <h3 class="text-xl font-semibold mb-2 text-gray-800">
-                Number of Students
-              </h3>
-              <p class="text-2xl font-bold text-gray-900">{{ studentCount }}</p>
-            </div>
-          </div>
-        </div>
+    <section class="page__tiles" aria-label="Totals">
+      <StatCard label="Students" icon="users" :value="studentCount" :loading="loading" to="/admin/students" />
 
-        <div class="w-full sm:w-1/2 lg:w-1/4">
-          <div class="bg-white p-6 rounded-lg shadow-lg flex items-center space-x-4">
-            <div class="flex-shrink-0">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="w-6 h-6 mr-2"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M12 11a4 4 0 110-8 4 4 0 010 8zm-2 1v2a4 4 0 018 0v2M5.5 20.5h13"
-                />
-              </svg>
-            </div>
-            <div>
-              <h3 class="text-xl font-semibold mb-2 text-gray-800">
-                Number of Teachers
-              </h3>
-              <p class="text-2xl font-bold text-gray-900">{{ teacherCount }}</p>
-            </div>
-          </div>
-        </div>
+      <StatCard label="Teachers" icon="user" :value="teacherCount" :loading="loading" to="/admin/teachers" />
 
-        <div class="w-full sm:w-1/2 lg:w-1/4">
-          <div class="bg-white p-6 rounded-lg shadow-lg flex items-center space-x-4">
-            <div class="flex-shrink-0">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="w-12 h-12 text-yellow-500"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M3 6h18M3 12h18M3 18h18"
-                />
-              </svg>
-            </div>
-            <div>
-              <h3 class="text-xl font-semibold mb-2 text-gray-800">
-                Number of Courses
-              </h3>
-              <p class="text-2xl font-bold text-gray-900">{{ courseCount }}</p>
-            </div>
-          </div>
-        </div>
-      </div>
+      <StatCard label="Courses" icon="book" :value="courseCount" :loading="loading" to="/admin/courses" />
+    </section>
 
-      <div class="bg-white p-6 rounded-lg shadow-lg mt-6">
-        <h3 class="text-xl font-semibold mb-4 text-gray-800 text-center">
-          School Events
-        </h3>
-        <div v-if="eventHandlers.length">
-          <ul class="space-y-4">
-            <li
-              v-for="eventHandler in eventHandlers"
-              :key="eventHandler.id"
-              class="p-4 border-b border-gray-200"
-            >
-              <h4 class="text-lg font-semibold text-blue-800">
-                {{ eventHandler.name }}
-              </h4>
-              <p class="text-blue-900">
-                Description: {{ eventHandler.description }}<br />
-                Date: {{ eventHandler.date }}
-              </p>
-            </li>
-          </ul>
-        </div>
-        <p v-else class="text-gray-600 text-lg font-medium text-center mt-6">
-          No event handlers found.
-        </p>
-      </div>
-    </div>
-  </div>
+    <p v-if="eventsError" class="alert alert-error" role="alert">
+      {{ eventsError }}
+      <button type="button" class="btn btn-ghost alert__action" @click="fetchData">
+        Try again
+      </button>
+    </p>
+
+    <PanelCard v-else title="School events" :action="{ to: '/admin/event-handlers', label: 'Manage events' }"
+      :loading="loading" :empty="!eventHandlers.length" empty-title="No events yet"
+      empty-text="Events added under Events appear here, and on every dashboard.">
+      <EventList :events="eventHandlers" />
+    </PanelCard>
   </div>
 </template>
 
 <script>
 import axios from "@/axios";
 import { ref, onMounted } from "vue";
+import { apiErrorMessage } from "@/apiError";
+import StatCard from "@/components/StatCard.vue";
+import PanelCard from "@/components/PanelCard.vue";
+import EventList from "@/components/EventList.vue";
 
 export default {
   name: "AdminDashboard",
+  components: { StatCard, PanelCard, EventList },
   setup() {
     const studentCount = ref(0);
     const teacherCount = ref(0);
     const courseCount = ref(0);
     const eventHandlers = ref([]);
     const loading = ref(true);
+    const statsError = ref("");
+    const eventsError = ref("");
 
-    const fetchStudentData = async () => {
+    /**
+     * Writes the endpoint's `count` into `target`, or `null` when the request
+     * fails.  `null` is deliberately not the same as `0`: the tile renders it
+     * as an em dash, so a failed request cannot be read as a real total of zero
+     * (which is what this page used to do, silently).
+     */
+    const loadCount = async (url, target) => {
       try {
-        const response = await axios.get("/admin/students");
-        studentCount.value = response.data.count;
+        const response = await axios.get(url);
+        target.value = response.data.count ?? null;
       } catch (error) {
-        console.error(
-          "Error fetching student data:",
-          error.response?.data?.message || error.message,
-        );
+        target.value = null;
+        // The first failure speaks for all of them: one dead endpoint would
+        // otherwise stack three identical alerts.
+        if (!statsError.value) {
+          statsError.value = apiErrorMessage(
+            error,
+            "We couldn't load the dashboard totals.",
+          );
+        }
       }
     };
 
-    const fetchTeacherData = async () => {
-      try {
-        const response = await axios.get("/admin/teachers");
-        teacherCount.value = response.data.count;
-      } catch (error) {
-        console.error(
-          "Error fetching teacher data:",
-          error.response?.data?.message || error.message,
-        );
-      }
-    };
-
-    const fetchCourseData = async () => {
-      try {
-        const response = await axios.get("/admin/courses");
-        courseCount.value = response.data.count;
-      } catch (error) {
-        console.error(
-          "Error fetching course data:",
-          error.response?.data?.message || error.message,
-        );
-      }
-    };
-
-    const fetchEventHandlers = async () => {
+    const loadEvents = async () => {
       try {
         const response = await axios.get("/admin/event-handlers");
         eventHandlers.value = response.data;
       } catch (error) {
-        console.error(
-          "Error fetching event handlers:",
-          error.response?.data?.message || error.message,
+        eventsError.value = apiErrorMessage(
+          error,
+          "We couldn't load the school events.",
         );
       }
     };
 
     const fetchData = async () => {
       loading.value = true;
+      statsError.value = "";
+      eventsError.value = "";
       await Promise.all([
-        fetchStudentData(),
-        fetchTeacherData(),
-        fetchCourseData(),
-        fetchEventHandlers(),
+        loadCount("/admin/students", studentCount),
+        loadCount("/admin/teachers", teacherCount),
+        loadCount("/admin/courses", courseCount),
+        loadEvents(),
       ]);
       loading.value = false;
     };
 
-    onMounted(() => {
-      fetchData();
-    });
+    onMounted(fetchData);
 
     return {
       studentCount,
@@ -212,50 +116,11 @@ export default {
       courseCount,
       eventHandlers,
       loading,
+      statsError,
+      eventsError,
+      fetchData,
     };
   },
 };
 </script>
 
-<style scoped>
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes pulse {
-  0% {
-    opacity: 0.5;
-  }
-  50% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0.5;
-  }
-}
-
-.loader-container {
-  text-align: center;
-}
-
-.loader {
-  border: 8px solid #f3f3f3;
-  border-top: 8px solid #3498db;
-  border-radius: 50%;
-  width: 80px;
-  height: 80px;
-  animation: spin 1.5s linear infinite;
-  margin: 0 auto;
-}
-
-.loader-container p {
-  margin-top: 1rem;
-  font-weight: 500;
-  animation: pulse 1.5s infinite;
-}
-</style>

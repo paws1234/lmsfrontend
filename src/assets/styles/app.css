@@ -337,6 +337,11 @@ select {
   border-color: var(--danger);
   color: var(--danger);
 }
+/* A retry control inside an alert is pushed to the far end, away from the
+   sentence that explains what went wrong. */
+.alert__action {
+  margin-left: auto;
+}
 .alert-success {
   background: var(--success-surface);
   border-color: var(--success);
@@ -367,6 +372,71 @@ select {
   color: var(--text);
 }
 
+/* ---------------------------------------------------------------------------
+   Content pages
+
+   The rhythm every authenticated content view shares: a page head, a row of
+   stat tiles and one or more section cards.  Defined once here so the admin,
+   teacher and student areas cannot drift apart — each dashboard used to invent
+   its own page padding, heading size and card radius, on top of the shell's.
+   --------------------------------------------------------------------------- */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  /* Still comfortable to scan on a 1440px screen; any wider and a row of tiles
+     stops reading as one group. */
+  max-width: 1180px;
+}
+
+.page__head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.page__eyebrow {
+  font-size: var(--step--1);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.page__title {
+  font-size: var(--step-3);
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--text);
+}
+
+.page__lead {
+  max-width: 60ch;
+  color: var(--text-muted);
+}
+
+/* `auto-fit`, not a column count: the tiles fill whatever width is left beside
+   the sidebar and wrap on their own, so there is no second breakpoint to keep
+   in step with the shell's. */
+.page__tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: var(--space-4);
+}
+
+/* Main panel beside an aside, once there is room for both. */
+.page__split {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4);
+  align-items: start;
+}
+
+@media (min-width: 1024px) {
+  .page__split {
+    grid-template-columns: 3fr 2fr;
+  }
+}
 .spinner {
   width: 22px;
   height: 22px;
