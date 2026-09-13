@@ -105,6 +105,7 @@
 <script>
 import axios from "@/axios";
 import { apiErrorMessage } from "@/apiError";
+import { performLogout } from "@/logout";
 export default {
   name: "StudentDashboard",
   data() {
@@ -172,14 +173,8 @@ export default {
         this.loading = false;
       }
     },
-    async logout() {
-      try {
-        await axios.post("/logout");
-        localStorage.removeItem("token");
-        this.$router.push("/login");
-      } catch (error) {
-        console.error("Error logging out:", error);
-      }
+    logout() {
+      performLogout(this.$router);
     },
   },
 };

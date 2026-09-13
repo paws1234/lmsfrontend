@@ -61,6 +61,15 @@ Status: **in progress** · Owner: frontend (`lmsfrontend`) · Last updated 2026-
   deliberate, owner-approved exception to §3: the response contract is unchanged, only a side effect.
   Verified by registering a student and confirming both rows exist, that a teacher registration creates
   no `students` row, and that a deliberately unlinked account still gets the explanatory panel.
+- **Logout was broken everywhere (fixed 2026-09-13).** `POST /api/logout` answered **400**, not 401:
+  `DecryptPayload`'s `isBase64('')` is true, so the empty body the frontend sends took the base64 branch
+  and failed on `json_decode("")`. Every one of the five logout handlers awaited that call *before*
+  clearing the token, so the failure was silent — you stayed signed in, on the same page, with no
+  message. `DecryptPayload` now early-returns on an empty body (which alone fixes the currently deployed
+  frontend), and `src/logout.js` clears local state and redirects *first*, revoking the token
+  best-effort so a sleeping API cannot trap anyone in a session. Diagnosis in `UI-UX-BASELINE.md`.
+- **Both fixes need deploying:** `DecryptPayload` to Render, the logout helper to Vercel. The backend
+  half is the one that unblocks the deployed site, since the deployed frontend already calls `/logout`.
 
 ### Still open
 - **F5** — *fixed (T4.1–T4.3, T4.6).* Error bodies are decrypted, and a rejected login, an unreachable
@@ -82,9 +91,18 @@ with the new build." The first half was **stale**. Re-verified:
   ("create tasks"), and `git rev-list --left-right --count origin/main...HEAD` returns `0 0` — neither
   ahead nor behind. The tracked tree is clean; the only untracked file is the new
   `UI-UX-BASELINE.md`, which is a working document, not yet committed.
-- **The only remaining deploy step is a Vercel redeploy** with this build. Nothing here has confirmed
-  which commit the deployed build corresponds to; that check belongs to T6.3, alongside confirming
-  `VUE_APP_API_BASE_URL` is still the sole endpoint switch.
+- **The Vercel deployment is current and works end to end** — checked 2026-09-13, which answers A10 and
+  much of T6.3. The deployed bundle calls `https://ctu-lms-api.onrender.com/api` (so no host is
+  hardcoded in `src/**`, and `VUE_APP_API_BASE_URL` really is the only switch), and it already contains
+  the recent error-handling strings, so the build is not stale. Signing in through
+  `https://ctu-lms.vercel.app/login` reaches `/admin/dashboard` with real data.
+- **The hosted API cold-starts for up to ~2 minutes** after going idle — measured 45 s for a first
+  `GET`, **123 s** for a first `POST /api/login`, then 1.6 s once warm. Nothing in the UI indicates it,
+  and `axios` sets no timeout, so the spinner just stays. This is the main obstacle to using the hosted
+  site and it is not something the frontend can hide: keep the instance warm or move off the free tier.
+- **There was no administrator account at all** in the live database, which is why logging in as an
+  admin could never work. `database/seeders/AdminUserSeeder.php` now creates or repairs one. Full
+  diagnosis in `UI-UX-BASELINE.md`.
 - **The API runs against remote Supabase, and that is intentional** — confirmed by the owner
   2026-09-13. `backend/lmsbackend/.env:32` holds an active `DATABASE_URL` on
   `aws-0-ap-northeast-1.pooler.supabase.com`. Goal 5 is about the *application* being local —

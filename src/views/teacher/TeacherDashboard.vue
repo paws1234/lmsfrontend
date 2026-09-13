@@ -80,7 +80,7 @@
 </template>
 <script>
 import axios from "@/axios";
-import { apiErrorMessage } from "@/apiError";
+import { performLogout } from "@/logout";
 export default {
   name: "TeacherDashboard",
   data() {
@@ -128,18 +128,8 @@ export default {
         this.$router.push("/login");
       }
     },
-    async logout() {
-      try {
-        await axios.post("/logout");
-        localStorage.removeItem("token");
-        this.$router.push("/login");
-      } catch (error) {
-        // `error.response` is undefined when the request never reached the
-        // server, so the previous `error.response.data.message` threw from
-        // inside this very catch block.  The helper cannot throw and
-        // understands both the `message` and `error` body keys.
-        console.error("Logout error:", apiErrorMessage(error, error.message));
-      }
+    logout() {
+      performLogout(this.$router);
     },
   },
 };

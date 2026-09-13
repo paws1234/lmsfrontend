@@ -77,7 +77,7 @@
 </template>
 
 <script>
-import axios from "@/axios";
+import { performLogout } from "@/logout";
 import { useRouter } from "vue-router";
 import { ref } from "vue";
 
@@ -91,19 +91,9 @@ export default {
       isSidebarOpen.value = !isSidebarOpen.value;
     };
 
-    const logout = async () => {
-      try {
-        await axios.post("/logout");
-        localStorage.removeItem("token");
-        sessionStorage.removeItem("token");
-        router.push("/login");
-      } catch (error) {
-        console.error(
-          "Logout error:",
-          error.response?.data?.message || error.message,
-        );
-      }
-    };
+    // Clearing local state and redirecting is the whole job; revoking the token
+    // server-side happens best-effort inside the helper.
+    const logout = () => performLogout(router);
 
     return {
       isSidebarOpen,

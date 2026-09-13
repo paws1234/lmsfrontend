@@ -576,3 +576,135 @@ matching prose, but it would change the contract. Flagged, not done.
 - The Schedule card's `v-if`/`class` pair must stay **multi-line**. That is what Prettier wants;
   collapsing it onto two lines adds 3 warnings, and moving the condition to a wrapping `<template>`
   adds 1 (the extra indent pushes the long class past the print width).
+
+---
+
+## Admin seeder, and why the hosted site rejected the login
+
+### Diagnosis — two independent causes, both measured
+
+**1. There was no administrator account at all.** The live database held three users and **zero admins**:
+
+| id | email | role |
+|----|-------|------|
+| 2 | `smoke.test@ctu-lms.dev` | student |
+| 3 | `pawsmedz@gmail.com` | student |
+| 4 | `f4.verify@example.com` | student |
+
+Only one `students` row existed across the three. Nothing could sign in as an administrator because no
+such account existed. (Those three predate the register fix, which is why they are not all linked.)
+
+**2. The hosted API cold-starts for up to two minutes.** The Render instance sleeps. Measured:
+
+| Request | Time |
+|---------|------|
+| `GET /api/lms` — first touch after idle | **45.4 s** |
+| `POST /api/login` — first attempt (cold) | **123.0 s** |
+| `POST /api/login` — immediately after | 1.6 s |
+| `GET /api/admin/dashboard` — warm | 1.6 s |
+
+So even with correct credentials the first attempt looks like a hang. Nothing in the UI explains it,
+and `axios` sets no timeout, so the spinner simply stays until the response arrives.
+
+**Ruled out — APP_KEY mismatch.** The frontend decrypts with a key baked into `src/axios.js`, so a
+deployed backend using a different one would fail to decrypt every login.
+`GET https://ctu-lms-api.onrender.com/api/lms` returns `{"app_key":"base64:/bdLq63o8…"}` — identical
+to the hardcoded key, so decryption was never the problem. Because that endpoint is deliberately
+unencrypted, it is the fastest way to check this in future.
+
+**Ruled out — wrong API host in the deployed bundle.** It calls
+`https://ctu-lms-api.onrender.com/api`, and already contains the recent error-handling strings, so the
+Vercel build is current.
+
+### The seeder
+
+`database/seeders/AdminUserSeeder.php`, also called from `DatabaseSeeder` so a plain `db:seed` runs it:
+
+```
+docker compose exec -T backend php artisan db:seed --class=AdminUserSeeder
+```
+
+- Idempotent; an existing email is promoted to `admin` and its password reset, which doubles as the
+  recovery path when nobody can sign in.
+- `ADMIN_NAME` / `ADMIN_EMAIL` / `ADMIN_PASSWORD` are optional. With no password supplied it
+  **generates a random one and prints it** — deliberately no default, because a published default
+  password for a privileged account on a public deployment is worse than having no admin.
+- Creates no `students` row, matching the role guard in `AuthController::register`.
+
+Run against the live database: admin id 13, `admin@ctu-lms.dev`.
+
+### Verified on the hosted site, not just locally
+
+`POST https://ctu-lms-api.onrender.com/api/login` → **200** with `{"role":"admin"}`, then
+`GET /api/admin/dashboard` using that token → **200** `{"message":"Welcome to the admin dashboard"}`.
+
+Through the real UI at `https://ctu-lms.vercel.app/login`: signed in and redirected to
+`/admin/dashboard` in **4.0 s** (API warm), token stored, dashboard fully rendered — 1 student,
+0 teachers, 0 courses, and the existing smoke-test event.
+
+**Still true:** the cold start remains. A first login on an idle deployment can take ~2 minutes, and
+nothing in the UI says so. Keeping the API warm, or moving off the free tier, is the fix — it is not
+something the frontend can paper over.
+
+---
+
+## Logout — why it failed, and the fix
+
+### Cause: `DecryptPayload` rejected requests with an empty body
+
+`POST /api/logout` returned **HTTP 400**
+`{"error":"Decoding failed: Failed to decode JSON data after Base64 decoding."}`
+
+`axios.post("/logout")` sends **no body**, and the middleware's guard is
+`base64_encode(base64_decode($data, true)) === $data` — which is **true for the empty string**. So the
+empty body took the base64 branch and then failed on `json_decode("")`.
+
+| Request | Before | After |
+|---------|--------|-------|
+| `POST /logout`, no body | **400** | **200** `{"message":"Successfully logged out"}` |
+| `POST /logout`, body `e30=` (i.e. `{}`) | 200 | 200 |
+
+Logout was the **only** bodyless POST in the app — all five call sites were `axios.post("/logout")` —
+so this middleware bug had exactly one visible symptom, which is why it went unnoticed elsewhere.
+
+### Why it was silent
+
+All five call sites ran `await axios.post("/logout")` **before** clearing the token:
+
+```js
+try { await axios.post("/logout"); localStorage.removeItem("token"); router.push("/login"); }
+catch (error) { console.error(...); }        // ← nothing else happens
+```
+
+A failure therefore left the user signed in, on the same page, with no message at all. The status was
+400 rather than 401, so it did not even look like an authentication problem.
+
+### The fix
+
+1. **`DecryptPayload`** now returns early when the body is empty — the same reasoning as its existing
+   GET early-return. This alone restores logout for the currently deployed frontend, because that
+   frontend already sends no body.
+2. **`src/logout.js`** replaces the five duplicated handlers. Local state is cleared and the redirect
+   runs *first*, so signing out cannot be blocked by an API that is asleep (the hosted instance can take
+   minutes to wake). Revoking the token is then attempted best-effort using the token captured *before*
+   it was cleared — the request interceptor reads from `localStorage`, so clearing first would send the
+   call out unauthenticated and earn a 401.
+
+### Verified
+
+| Check | Result |
+|-------|--------|
+| `POST /logout` with no body (local API) | **200**, token revoked |
+| Re-using that revoked token | 401 `{"message":"Unauthenticated."}` |
+| Browser: sign in as a student, click Logout | redirected to `/login` in **0.26 s**, token cleared |
+| Server-side after the browser logout | tokens for that user: **0** |
+
+**Careful with that 401:** it needs `Accept: application/json`. Without the header Laravel tries to
+redirect to a named `login` route that does not exist and answers **500**. Only non-JSON clients are
+affected — axios always sends the header, so this is a curl/testing trap rather than a product bug.
+
+**Side effect of this verification, worth knowing:** signing out deletes **all** of that user's tokens
+(`AuthController::logout()` does `$user->tokens()->delete()`), so revoking the admin's token during
+testing also ended the deployed browser session. The account is fine; it just needs a fresh sign-in.
+
+Regression: lint **791 / 0 errors**, build succeeds with the same 4 warnings.
