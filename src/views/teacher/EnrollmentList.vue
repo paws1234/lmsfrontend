@@ -1,6 +1,6 @@
 <template>
   <div class="p-6 bg-gray-100 min-h-screen">
-    <h2 class="text-2xl font-bold mb-4">Enrollments</h2>
+    <h2 class="text-2xl font-bold mb-4 text-gray-800">Enrollments</h2>
     <div class="mb-4">
       <input
         v-model="searchQuery"

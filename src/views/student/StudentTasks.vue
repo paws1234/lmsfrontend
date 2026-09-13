@@ -3,7 +3,7 @@
 
   <div class="flex">
     <div class="p-6 space-y-6 flex-1 lg:ml-64">
-      <h2 class="text-2xl font-semibold">Your Tasks</h2>
+      <h2 class="text-2xl font-semibold text-gray-800">Your Tasks</h2>
       <div class="flex space-x-4">
         <button @click="toggleView('todos')"
           :class="{ 'bg-blue-500 text-white': activeView === 'todos', 'bg-gray-200': activeView !== 'todos' }"
@@ -17,7 +17,7 @@
         </button>
       </div>
       <div v-if="activeView === 'todos'" class="space-y-6">
-        <h3 class="text-xl font-medium">Tasks</h3>
+        <h3 class="text-xl font-medium text-gray-800">Tasks</h3>
         <p class="text-gray-600">Here are your pending tasks. Follow the instructions and check any attachments for
           additional resources.</p>
         <div v-for="(subjectTodos, subjectId) in groupedTodosByDate" :key="subjectId" class="space-y-6">
@@ -49,7 +49,8 @@
         </div>
       </div>
       <div v-if="activeView === 'questions'" class="space-y-6">
-  <h3 class="text-xl font-medium">Questions</h3>
+        <h3 class="text-xl font-medium text-gray-800">Questions</h3>
+     
   <p class="text-gray-600">
     Here are the questions you need to answer. Make sure to read through the provided answers and notes.
   </p>
@@ -95,7 +96,8 @@
 
 <!-- Modal for Answering Questions -->
 <div v-if="isModalOpen" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center">
-  <div class="bg-white p-6 rounded-lg shadow-lg w-1/3">
+        <div class="bg-white p-6 rounded-lg shadow-lg w-1/3 text-gray-800">
+     
     <h3 class="text-2xl font-semibold mb-4">Submit Your Answer</h3>
     <form @submit.prevent="submitAnswers">
       <div v-for="(question, index) in modalQuestions" :key="index" class="mb-4">

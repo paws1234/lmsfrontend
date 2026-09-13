@@ -108,6 +108,24 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Form controls keep the platform's light background unless a view restyles
+   them, so they need a text colour that reads on it.  They must NOT inherit
+   `--text`: that token flips to near-white in dark mode, which paints white text
+   on a still-white input and makes everything typed invisible.
+
+   The value is a literal rather than a token on purpose.  Any custom property
+   whose job is "text on a default light control" has to stay the same in both
+   themes — giving it a dark-mode value would reintroduce exactly this bug, so
+   there is nothing to keep in sync in the dark block below.
+
+   A view that genuinely wants a themed control should use `.form-field`, which
+   pairs `--surface` with `--text`.  That is a class selector, so it — and any
+   Tailwind `text-*` utility — wins over this element selector. */
+input,
+textarea,
+select {
+  color: #12294a;
+}
 /* Keyboard users get a visible focus ring everywhere.  The templates commonly
    set `focus:outline-none`, which removes the only affordance a keyboard user
    has; this restores one that does not depend on those classes. */

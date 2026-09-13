@@ -708,3 +708,78 @@ affected — axios always sends the header, so this is a curl/testing trap rathe
 testing also ended the deployed browser session. The account is fine; it just needs a fresh sign-in.
 
 Regression: lint **791 / 0 errors**, build succeeds with the same 4 warnings.
+
+---
+
+## Dark mode: invisible text (reported 2026-09-13)
+
+Reported as *"the login data is white, I can't see my inputs at all"*. Reproduced and measured.
+
+### Cause
+
+The login and register inputs carried no `text-*` class and no background, so they inherited
+`body { color: var(--text) }` — a token the dark theme flips to near-white — while their background
+stayed the browser's white:
+
+| state | input text | input background | contrast |
+|-------|-----------|------------------|----------|
+| light | `rgb(18,41,74)` | white | ~14.6 |
+| dark | `rgb(232,238,246)` | white | **~1.06 — invisible** |
+
+`--text` is *meant* to flip with the theme, so any text sitting on a still-light surface must not use
+it. The auth card is `bg-white` (theme-independent), which makes the page a light page whose text was
+following the dark theme.
+
+It is reachable because the dark toggle lives on `HomeComponent` and sets the class on `<html>`, where
+it survives every SPA navigation — so navigating from the home page to `/login` arrives already dark.
+A hard reload of `/login` is light, which is what makes the report look intermittent.
+
+### Fix
+
+One rule for the whole app instead of per-file edits, because the same input class string appears in
+**7 view files**:
+
+```css
+input,
+textarea,
+select {
+  color: #12294a;
+}
+```
+
+The value is a literal on purpose: anything whose job is "text on a default light control" has to be
+the same in both themes, so it deliberately has no dark-mode counterpart to keep in sync. `.form-field`
+(a class selector) and any Tailwind `text-*` utility still win, so a view that wants a themed control
+can still have one. Verified afterwards: all six auth inputs at **14.57:1**.
+
+### The same defect elsewhere
+
+A sweep of **22 authenticated pages** (9 admin, 9 teacher, 4 student) with the theme forced on, flagging
+any text that inherits the theme colour on a light background below 3:1, found **6 more elements**:
+
+| page | element | contrast |
+|------|---------|----------|
+| `/admin/teachers` | "No teachers found." | 1.07 |
+| `/teacher/enrollments` | `<h2>Enrollments</h2>` | 1.06 |
+| `/teacher/todos/create` | `<h2>Create TODO</h2>` | 1.06 |
+| `/student/tasks` | `<h2>Your Tasks</h2>`, `<h3>Tasks</h3>` | 1.11 |
+| `/student/studentlists` | `<h1>Enrolled Subjects</h1>` | 1.11 |
+
+Each got an explicit colour matching its siblings, plus **two latent twins** that were not rendered
+during the sweep but sit in the same files with the same defect: the "Submit Your Answer" modal heading
+in `StudentTasks.vue` and "No subjects enrolled yet." in the student `StudentList.vue`.
+
+Re-swept: **22 pages, 0 findings, 0 auth failures.** The second number matters — an intermediate
+re-check used tokens whose users had already been deleted, so the pages 401'd and rendered only their
+static shells, where a "clean" result would have been meaningless. Count 401s whenever a clean sweep is
+the evidence.
+
+### Known remaining gap
+
+Placeholder text is `rgb(156,163,175)` on white — **2.54:1**, below the 4.5:1 AA threshold for text. It
+is readable but faint, it is pre-existing, and changing it restyles the placeholder of every input in
+the app, so it is reported rather than changed.
+
+**And the structural point stands:** dark mode is a half-finished migration (T2.1 scoped 9 views). Any
+view that has not opted in will keep producing this class of problem while the theme is active. The
+sweep says the app is clean *today*; every new view without explicit colours regresses it.

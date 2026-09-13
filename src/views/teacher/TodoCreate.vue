@@ -1,6 +1,6 @@
 <template>
   <div class="p-6 bg-gray-100 min-h-screen">
-    <h2 class="text-2xl font-bold mb-4">Create TODO</h2>
+    <h2 class="text-2xl font-bold mb-4 text-gray-800">Create TODO</h2>
     <form @submit.prevent="createTodo">
       <div class="mb-4">
         <label class="block mb-2 text-gray-700">Subject</label>

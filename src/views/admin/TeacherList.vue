@@ -24,7 +24,9 @@
       <p v-else-if="error" class="text-red-600">
         Error loading data. Please try again later.
       </p>
-      <p v-if="!teachers.length && !loading && !error">No teachers found.</p>
+      <p v-if="!teachers.length && !loading && !error" class="text-gray-600 text-lg font-medium text-center">
+        No teachers found.
+      </p>
       <router-link
         to="/admin/teachers/create"
         class="inline-block bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"

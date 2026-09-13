@@ -70,6 +70,14 @@ Status: **in progress** · Owner: frontend (`lmsfrontend`) · Last updated 2026-
   best-effort so a sleeping API cannot trap anyone in a session. Diagnosis in `UI-UX-BASELINE.md`.
 - **Both fixes need deploying:** `DecryptPayload` to Render, the logout helper to Vercel. The backend
   half is the one that unblocks the deployed site, since the deployed frontend already calls `/logout`.
+- **Dark mode was making text invisible (fixed 2026-09-13).** The auth inputs had no `text-*` class, so
+  they inherited `body { color: var(--text) }` — which the dark theme flips to near-white — over the
+  browser's white input background: **~1.06:1 contrast**. Fixed with one app-wide rule for form controls
+  using a literal colour that deliberately does not flip. A sweep of all 22 authenticated pages then
+  found **6 more elements** (headings and an empty state) with the same defect; each got an explicit
+  colour, plus two latent twins. Re-swept clean. This is a direct consequence of enabling dark mode
+  globally before the views opted in, and it is the concrete cost of the outstanding T2 work — see
+  `UI-UX-BASELINE.md`.
 
 ### Still open
 - **F5** — *fixed (T4.1–T4.3, T4.6).* Error bodies are decrypted, and a rejected login, an unreachable

@@ -4,10 +4,10 @@
         </div>
         <div class="lg:w-3/4 w-full p-4 flex justify-center">
             <div class="w-full max-w-4xl">
-                <h1>Enrolled Subjects</h1>
+                <h1 class="text-gray-800">Enrolled Subjects</h1>
                 <div v-if="loading" class="loader">Loading...</div>
                 <div v-else-if="subjects.length === 0" class="no-enrollments">
-                    <p>No subjects enrolled yet.</p>
+                    <p class="text-gray-600">No subjects enrolled yet.</p>
                 </div>
                 <div v-else>
                     <ul>
