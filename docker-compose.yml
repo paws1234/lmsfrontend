@@ -1,0 +1,33 @@
+# Vue frontend, self-contained.
+#
+#   docker compose up -d --build
+#   open http://localhost:8080
+#
+# The Laravel API lives in its own repository (lmsbackend) and runs as a
+# separate compose project.  This container only serves the app; the *browser*
+# is what calls the API, so no shared Docker network is needed.
+name: lmsfrontend
+
+services:
+  frontend:
+    build:
+      context: .
+    image: lms-frontend:dev
+    restart: unless-stopped
+    environment:
+      # Read by src/axios.js.  The browser resolves it, so it must be an address
+      # the host can reach (not a compose service name).
+      VUE_APP_API_BASE_URL: ${VUE_APP_API_BASE_URL:-http://localhost:8000/api}
+      # Hot reload needs file watching.  inotify works on Linux; on Docker
+      # Desktop (Windows/macOS) set WATCHPACK_POLLING=true.
+      WATCHPACK_POLLING: "${WATCHPACK_POLLING:-false}"
+    volumes:
+      # Live source code...
+      - .:/app
+      # ...but keep the dependencies installed in the image, not the host's.
+      - frontend_node_modules:/app/node_modules
+    ports:
+      - "${FRONTEND_PORT:-8080}:8080"
+
+volumes:
+  frontend_node_modules:
