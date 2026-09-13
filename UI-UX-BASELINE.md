@@ -249,7 +249,7 @@ the single remaining deploy step, to be settled in T6.3.
 
 ---
 
-## T0.5 — Local iteration loop ⚠️ **target not met**
+## T0.5 — Local iteration loop (Supabase backend confirmed intentional)
 
 `POST /api/login` against `localhost:8000`, measured from the host:
 
@@ -268,7 +268,7 @@ took 1.20 s and register 2.64 s.
 attempt 3. So the plan's "no ~40 s cold starts" goal is met; what remains is a floor of roughly 1–2.3 s
 on every request.
 
-### Cause — configuration, not code
+### Why it is not the local `db` container — and why that is fine
 
 The API is **not** talking to the local `db` container. `backend/lmsbackend/.env:32` holds an active:
 
@@ -286,14 +286,20 @@ select count(*) from users where email = 'baseline-…@example.com';   -- in the
 
 so the row that login just matched does not exist in the local database.
 
-### Restoring a genuinely local loop (identified, deliberately not done)
+### Status: accepted configuration, not a defect
 
-Per repo memory this is a one-line change plus a recreate:
-comment out `.env:32`, then `docker compose up -d --no-deps --force-recreate backend`.
+**Confirmed by the owner 2026-09-13: running against Supabase is normal and intended.** So the ~1–2.3 s
+floor is the cost of the chosen backend, not something to fix, and the `< 1 s` figure in the task
+brief should be read as "no cold start", which is the property that actually matters and which does
+hold. Nothing here is blocking.
 
-**Not done here on purpose.** It changes which database the application reads, so the admin/teacher/
-student data the user sees would change with it. That is the owner's call, not a side effect of a
-baseline task. Logged in the plan's §0 as contradicting goal 5.
+The one thing that does follow: **every browser measurement in this plan inherits that latency.** Any
+UI state that is judged by how quickly it appears will look ~1–2.3 s slower than it is on a warm local
+database, so states must be judged on *what* renders rather than on timing.
+
+For the record, if a genuinely local database is ever wanted, it is one commented-out line plus a
+recreate (`docker compose up -d --no-deps --force-recreate backend` with `.env:32` disabled) — but it
+changes which data the app displays, so it is not a casual switch.
 
 ---
 
@@ -457,3 +463,44 @@ the alert renders **`internal`**. That is the API's own text, read from the `err
   `chunk-vendors` unchanged at 197 811 B.
 - All test accounts deleted from the remote database afterwards: 2 users, 2 Sanctum tokens. The
   `students` row went with its user via `ON DELETE CASCADE`, so nothing was left behind.
+
+---
+
+## T4.6 — Register form
+
+`RegisterComponent.vue`'s catch block did nothing but `console.error(error)`, so a duplicate email or
+an unreachable server left the form completely silent — the button appeared to do nothing at all. It
+now carries an `errorMessage` state, rendered as `class="alert alert-error"` and filled by the shared
+helper.
+
+Verified in the browser:
+
+| Action | Rendered |
+|--------|----------|
+| registered an email that already exists | `The email has already been taken.` |
+| register request aborted | `We can't reach the server. Please check your connection and try again.` |
+
+The first row is a 422 whose body carries Laravel's validation message — previously invisible to the
+user. (**Not** verified: the `< 8` character password case, which produces the same 422 shape.)
+
+## T4.7 — F6 fix side decided
+
+**Frontend, not the API.** `POST /api/register` writes a `users` row and no `students` row. Having the
+backend create the `students` row as well was rejected: it changes what a registration means and how
+the API behaves, which §3 rules out ("no change to … the API contract"). Recorded in the plan's
+Phase 4.
+
+What the decision does **not** settle, and should not be read as settling: registration still produces
+an account that cannot use the student area until an administrator enrols it. The panel makes that
+legible; it does not make the account usable. If self-provisioning is the intended behaviour, that is a
+backend change and needs an explicit override of §3.
+
+## Regression state after T4.1–T4.7
+
+- Lint **791 warnings / 0 errors** — one better than the 792 baseline. `RegisterComponent.vue`
+  unchanged at its 1 pre-existing warning; `StudentDashboard.vue` 32 → 31.
+- `npm run build` succeeds, still 4 warnings. CSS **31 135 B raw / 6 904 B gzip**, inside the budget.
+- **Watch out:** an external reformat of `StudentDashboard.vue` collapsed the Schedule `v-if` onto two
+  lines and added **3** lint warnings (791 → 794). Restoring the multi-line attribute form the file
+  already used brought it back to 791. If an editor is formatting on save in this workspace, it is not
+  using the project's Prettier settings.

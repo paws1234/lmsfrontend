@@ -56,13 +56,14 @@ Status: **in progress** · Owner: frontend (`lmsfrontend`) · Last updated 2026-
   `UI-UX-BASELINE.md` T4.1–T4.5.
 
 ### Still open
-- **F5** — *partly fixed.* Error bodies are decrypted and the two failure kinds are distinguished,
-  but only on the login form; `RegisterComponent` (T4.6) still needs the same treatment, and the
-  frontend-vs-backend decision for F6 (T4.7) is unmade.
-- **F6** — *fixed for the student dashboard.* A missing `students` row now renders a "your profile is
-  not set up yet" panel instead of zeros. The scores page still says "No scores yet" for the same
-  condition; both are 404s, distinguishable only by the body key, which is now readable — worth
-  revisiting rather than leaving as-is.
+- **F5** — *fixed (T4.1–T4.3, T4.6).* Error bodies are decrypted, and a rejected login, an unreachable
+  server and a validation failure each now say something true — on both the login and register forms.
+- **F6** — *fixed for the student dashboard (T4.4/T4.5); fix side decided (T4.7).* A missing
+  `students` row renders a "your profile is not set up yet" panel instead of zeros. The scores page
+  still says "No scores yet" for the same condition — both are 404s, distinguishable only by the body
+  key, which is now readable — so it is worth revisiting rather than leaving as-is. Registration still
+  produces an account that cannot use the student area until an admin enrols it; that is a product
+  question, recorded in Phase 4.
 - **F9** — the dead `dotenv` dependency and the unused `localStorageInterceptor.js`.
 - Phase 6 polish, and the accessibility half of Phase 2.
 
@@ -78,13 +79,14 @@ with the new build." The first half was **stale**. Re-verified:
 - **The only remaining deploy step is a Vercel redeploy** with this build. Nothing here has confirmed
   which commit the deployed build corresponds to; that check belongs to T6.3, alongside confirming
   `VUE_APP_API_BASE_URL` is still the sole endpoint switch.
-- **The local API is pointed at remote Supabase, not the local `db` container.**
-  `backend/lmsbackend/.env:32` holds an active `DATABASE_URL` on
-  `aws-0-ap-northeast-1.pooler.supabase.com`, and the measured cost is a floor of **1.0–2.3 s on every
-  request** (valid login 1.20 s, register 2.64 s). No cold start — attempt 1 was not the slowest — but
-  this contradicts §2 goal 5 ("local-first iteration"). Measured and explained in
-  `UI-UX-BASELINE.md` T0.5. Restoring the local loop is one commented-out line plus a backend
-  recreate, deliberately left to the owner because it changes which data the app displays.
+- **The API runs against remote Supabase, and that is intentional** — confirmed by the owner
+  2026-09-13. `backend/lmsbackend/.env:32` holds an active `DATABASE_URL` on
+  `aws-0-ap-northeast-1.pooler.supabase.com`. Goal 5 is about the *application* being local —
+  `php artisan serve` on :8000 with the Vue dev server on :8080, so no Render cold start — and that
+  holds. The residual **1.0–2.3 s per request** (valid login 1.20 s, register 2.64 s) is network
+  distance to the database, not a defect. **Practical consequence, not a bug:** every browser
+  measurement in this plan inherits that latency, so UI states must be judged with it in mind.
+  Measurements in `UI-UX-BASELINE.md` T0.5.
 
 Every claim in this plan is now backed by numbers in **`UI-UX-BASELINE.md`** (build size, lint
 counts, route inventory). This file states intent; that one holds the measurements.
@@ -197,6 +199,18 @@ flagged rather than assumed.
 - **F4** — Scores renders an `.empty-state` card ("No scores yet — they appear once your teacher publishes results") on a 404 instead of a blank page.
 - **F5** — read/decrypt the error body so "Invalid credentials" reaches the user, and distinguish a network failure from rejected credentials.
 - **F6** — when the dashboard's profile lookup 404s, show a clear "your profile is not set up yet" panel rather than zeros.
+- **F6 — fix side decided 2026-09-13 (T4.7): the frontend, not the API.** `POST /api/register` writes a
+  `users` row and no `students` row, so a brand-new student account has no profile. Two ways out:
+  - *Frontend* (chosen) — render a "your profile is not set up yet" panel instead of zeros. Ships in
+    T4.4/T4.5, and touches no contract.
+  - *Backend* — have register create the `students` row as well. Rejected because it changes what a
+    registration means and how the API behaves, which §3 rules out ("no change to … the API
+    contract").
+
+  **What this decision does not settle.** Registration still produces an account that cannot use the
+  student area until an administrator enrols it. The panel makes that legible; it does not make the
+  account usable. If self-provisioning is what the product actually wants, that is a backend change
+  and needs an explicit override of §3 — worth confirming rather than assuming.
 - Skeletons/spinners while the API responds.
 - Verify: with an empty database every page explains itself; with data it renders it.
 

@@ -89,6 +89,10 @@
           </p>
         </div>
 
+        <div v-if="errorMessage">
+          <p class="alert alert-error">{{ errorMessage }}</p>
+        </div>
+
         <div>
           <button
             type="submit"
@@ -115,6 +119,7 @@
 
 <script>
 import axios from "../axios";
+import { apiErrorMessage } from "../apiError";
 
 export default {
   data() {
@@ -125,11 +130,13 @@ export default {
       role: "student",
       password_confirmation: "",
       passwordError: "", // Add this line to define the passwordError property
+      errorMessage: "",
     };
   },
   methods: {
     async register() {
       this.passwordError = ""; // Reset the error message before checking
+      this.errorMessage = "";
       if (this.password !== this.password_confirmation) {
         this.passwordError = "Passwords do not match.";
         return;
@@ -143,7 +150,14 @@ export default {
         });
         this.$router.push("/login");
       } catch (error) {
-        console.error(error);
+        // The API answers 422 with a readable reason ("The email has already
+        // been taken."), and an unreachable server has no body at all.  Both
+        // used to be swallowed by a bare `console.error`, so the form simply
+        // did nothing.
+        this.errorMessage = apiErrorMessage(
+          error,
+          "We couldn't create your account. Please try again.",
+        );
       }
     },
   },
