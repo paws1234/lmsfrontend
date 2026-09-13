@@ -30,9 +30,23 @@ Status: **in progress** · Owner: frontend (`lmsfrontend`) · Last updated 2026-
   `HomeComponent`'s header; `autocomplete` added to both auth forms (`email`, `current-password`,
   `name`, `new-password`). Still open: the dark-mode control is a `<div @click>` with no button
   semantics, keyboard access or `aria-pressed`.
+- **F4 fixed** — `StudentScores.vue` now has one state at a time: loading (`.spinner`), empty
+  (`.empty-state`), error (`.alert-error`) and data. A 404 is the API saying "this student has no
+  submissions yet", so it renders "No scores yet / They appear once your teacher publishes
+  results." instead of a blank page; only a non-404 failure becomes the error alert (and the
+  `console.error` that used to fire on every empty visit is gone). The body cannot be read to tell
+  "no submissions" from "no student row" — `EncryptResponse` encrypts the 404 too — so the branch
+  is on the status code only; that second case is F6's job. Verified in the browser against the
+  real API with a fresh `student` account (register → login → `/student/scores`): real 404 →
+  empty state, 200 with `score_data` → the list still renders, 200 with empty `score_data` → empty
+  state, 500 → "We couldn't load your scores. Please try again later.". Legible at 390×844 and
+  768×1024, no horizontal overflow at 390/768/1440 (`documentElement.scrollWidth` equals the
+  viewport at all three). The 1440 screenshots came back blank even for the **unmodified** login
+  page, so `screenshot_page` is losing text at that size in this session — the 1440 check is
+  DOM-measured, not eyeballed.
 
 ### Still open
-- **F4 / F5 / F6** — empty, error and missing-profile states (Phase 4). Not started.
+- **F5 / F6** — error and missing-profile states (Phase 4). Not started.
 - **F9** — the dead `dotenv` dependency and the unused `localStorageInterceptor.js`.
 - Phase 6 polish, and the accessibility half of Phase 2.
 - Not yet done: committing/pushing, and redeploying Vercel with the new build.
@@ -44,7 +58,7 @@ Status: **in progress** · Owner: frontend (`lmsfrontend`) · Last updated 2026-
 | F1 | **Every page ships the whole Tailwind framework from a third-party CDN.** | `public/index.html` links `cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css`. Tailwind is **not** in `package.json`, and there is no `tailwind.config.js`/`postcss.config.js`, so nothing is purged. | Verified |
 | F2 | **Dark mode cannot fully work.** `HomeComponent.vue` styles with `dark:bg-black`, `dark:text-gray-300`. Tailwind 2's CDN build uses the default config where `darkMode` is off, so no `dark:` utilities exist — the author had to drive some colours from JS instead. | Verified (files); one click to confirm |
 | F3 | **Login/Register logo overlaps the form card on mobile.** The wrapper is `absolute top-24 right-1/3 md:top-5 md:right-32 …` with **no positioned ancestor**, so it lays out against the viewport instead of the card. | Verified: 53 px overlap at 390×844 (logo y 108–236, card top 183) |
-| F4 | **Scores page renders blank when there is no data.** `ScoreController::index()` returns `404 {"message":"No submissions found for this student"}`; the view shows only the "Your Scores" heading plus a console error. | Verified in the deployed app |
+| F4 | **Scores page renders blank when there is no data.** `ScoreController::index()` returns `404 {"message":"No submissions found for this student"}`; the view shows only the "Your Scores" heading plus a console error. | Verified in the deployed app | Fixed |
 | F5 | **Login failures can't say why.** The 401 body is encrypted; the error path logs ciphertext and the UI falls back to "An error occurred. Please try again." | Verified in the deployed app |
 | F6 | **A new account lands on a broken dashboard.** `POST /api/register` writes only `users`; the student dashboard needs a `students` row and 404s without one. | Verified end-to-end |
 | F7 | **Markup/a11y defects.** `<html lang="">` is empty; a duplicate `<meta name="viewport">` sits inside `HomeComponent`'s `<header>` (i.e. in the body); the dark-mode control is a `<div @click>` with no button semantics, no keyboard access and no `aria-pressed`; form inputs have no `autocomplete` hints. | Verified (files) |
