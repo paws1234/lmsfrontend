@@ -49,6 +49,11 @@
   --success-surface: #e8f5ec;
   --info-surface: #eaf0fa;
 
+  /* Accent for a phrase emphasised inside a heading (the home hero).  The
+       seal's red reads on the light surface and the gold on the dark one, and
+       neither works on both — so the pair is a token here rather than a `dark:`
+       utility, which cannot express "one colour per theme" for the same class. */
+    --accent: var(--ctu-red);
   /* The navigation sidebar is deliberately its own surface: it is dark in both
        themes, so it cannot borrow `--text` (which flips) or sit on the page
        background.  Every value below is contrast-checked against `--sidebar-bg`,
@@ -113,6 +118,7 @@
   --success: #7fd6a0;
   --success-surface: #16301f;
   --info-surface: #16243a;
+  --accent: var(--ctu-gold);
 /* The sidebar darkens with the rest of the app, but keeps its own hierarchy
      rather than inverting: text stays light on dark in both themes. */
   --sidebar-bg: #0b1220;
@@ -260,13 +266,21 @@ select {
   background: var(--ctu-red-dark);
 }
 
+/* Ghost = transparent surface, themed border and themed text.  Both properties
+   live here rather than in `border-*` / `text-*` utilities on purpose: Tailwind's
+   utilities are emitted *before* this file, so `.btn`'s
+   `border: 1px solid transparent` shorthand would beat a `border-gray-300`
+   utility and leave the button with no visible edge — which looked like it
+   worked, because the dark compatibility layer re-asserts the border colour at
+   higher specificity and only light mode lost it.  `color` used to be the raw
+   brand blue, which is invisible on a dark page (~1.3:1). */
 .btn-ghost {
   background: transparent;
-  color: var(--ctu-blue);
+  color: var(--text);
   border-color: var(--border);
 }
 .btn-ghost:hover:not(:disabled) {
-  background: var(--surface-muted);
+  background: var(--surface-raised);
 }
 
 .card {
