@@ -49,6 +49,19 @@
   --success-surface: #e8f5ec;
   --info-surface: #eaf0fa;
 
+  /* The navigation sidebar is deliberately its own surface: it is dark in both
+       themes, so it cannot borrow `--text` (which flips) or sit on the page
+       background.  Every value below is contrast-checked against `--sidebar-bg`,
+       and against `--sidebar-active-text` on `--sidebar-active-bg`. */
+    --sidebar-bg: #12294a;
+    --sidebar-text: #e8eef6;
+    --sidebar-muted: #a8bad2;
+    --sidebar-hover: rgba(255, 255, 255, 0.08);
+    --sidebar-active-bg: #c8a12c;
+    --sidebar-active-text: #12294a;
+    --sidebar-border: rgba(255, 255, 255, 0.14);
+    --sidebar-danger: #ffb0a6;
+    --sidebar-danger-bg: #8f1d1a;
   --radius-sm: 6px;
   --radius: 10px;
   --radius-lg: 16px;
@@ -100,6 +113,11 @@
   --success: #7fd6a0;
   --success-surface: #16301f;
   --info-surface: #16243a;
+/* The sidebar darkens with the rest of the app, but keeps its own hierarchy
+     rather than inverting: text stays light on dark in both themes. */
+  --sidebar-bg: #0b1220;
+  --sidebar-hover: rgba(255, 255, 255, 0.1);
+  --sidebar-border: rgba(255, 255, 255, 0.16);
 }
 
 /* ---------------------------------------------------------------------------
@@ -377,6 +395,39 @@ select {
   flex-shrink: 0;
 }
 
+/* ---------------------------------------------------------------------------
+   Authenticated app shell
+
+   Shared by the admin, teacher and student layouts.  They used to each define
+   their own breakpoints and offsets: the sidebar became `static` at 1024px
+   while the content was still pushed by a fixed `margin-left: 16rem`, so from
+   1024px up the page was 16rem wider than the viewport.  One definition, one
+   breakpoint, and the sidebar's own width is the only thing that decides the
+   content width.
+   --------------------------------------------------------------------------- */
+.app-layout {
+  display: block;
+  min-height: 100vh;
+}
+
+.app-main {
+  padding: var(--space-4);
+  background-color: var(--surface-muted);
+}
+
+@media (min-width: 1024px) {
+  .app-layout {
+    display: flex;
+    height: 100vh;
+  }
+
+  .app-main {
+    /* min-width:0 lets a wide table shrink instead of overflowing the row. */
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow-y: auto;
+  }
+}
 /* ---------------------------------------------------------------------------
    Dark theme: compatibility layer for the built-in Tailwind palette
 
