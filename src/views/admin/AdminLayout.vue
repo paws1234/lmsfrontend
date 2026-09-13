@@ -29,7 +29,9 @@ export default {
   .main-content {
     flex-grow: 1; /* Ensure the content takes up remaining space */
     padding: 1rem;
-    background-color: #f7fafc; /* Optional: Add a background color for contrast */
+    /* Themed rather than a fixed light grey: this is the page surface the
+           admin views sit on, so it has to follow the theme. */
+      background-color: var(--surface-muted);
     overflow-y: auto; /* Allows scrolling if content overflows */
   }
 }
@@ -44,7 +46,7 @@ export default {
     margin-left: 0;
     width: 100%; /* Full width */
     padding: 1rem;
-    background-color: #f7fafc;
+    background-color: var(--surface-muted);
     overflow-y: auto;
   }
 }

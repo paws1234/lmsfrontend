@@ -7,6 +7,26 @@
     <meta name="theme-color" content="#1b3a6b" />
     <link rel="icon" href="<%= BASE_URL %>logo.ico" />
     <!--
+          Theme bootstrap.  Runs before the first paint so a dark-mode user
+          never sees a white flash while the JS bundle loads.  Same key, values
+          and class name as src/theme.js, which owns the logic for the rest of
+          the session — keep the two in step.
+        -->
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem("darkMode");
+          var dark =
+            stored === null
+              ? window.matchMedia("(prefers-color-scheme: dark)").matches
+              : stored === "true";
+          document.documentElement.classList.toggle("dark", dark);
+        } catch (e) {
+          /* storage blocked: fall through to the light default */
+        }
+      })();
+    </script>
+    <!--
           Tailwind is built and purged locally (see tailwind.config.js) and imported
           from src/main.js. It used to be an external stylesheet — 2.9 MB,
           render-blocking, fetched from a third party on every page load.

@@ -53,15 +53,15 @@ export default {
 <style scoped>
 .subject-list {
     padding: 20px;
-    background-color: #f9f9f9;
+    background-color: var(--surface-muted);
     border-radius: 8px;
 }
 
 .subject-item {
     padding: 15px;
-    border: 1px solid #ccc;
+    border: 1px solid var(--border);
     margin-bottom: 10px;
-    background-color: #fff;
+    background-color: var(--surface-raised);
     border-radius: 4px;
 }
 
@@ -73,23 +73,24 @@ export default {
 
 .subject-item p {
     font-size: 16px;
-    color: #666;
+    color: var(--text-muted);
 }
 
 .subject-schedule {
     margin-top: 10px;
     font-size: 14px;
-    color: #333;
+    color: var(--text-muted);
 }
 
 .loader {
     font-size: 20px;
     text-align: center;
-    color: #333;
+    /* Was a fixed #333: on a dark page that is 1.3:1, i.e. invisible. */
+        color: var(--text-muted);
 }
 
 .no-enrollments {
     text-align: center;
-    color: #f44336;
+    color: var(--danger);
 }
 </style>

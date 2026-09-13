@@ -203,12 +203,12 @@ table {
 }
 
 th, td {
-  border: 1px solid #ddd;
+  border: 1px solid var(--border);
   padding: 8px 16px;
 }
 
 th {
-  background-color: #f4f4f4;
+  background-color: var(--surface-muted);
 }
 
 td {

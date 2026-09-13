@@ -1,5 +1,5 @@
 <template>
-  <div :class="{ 'dark': darkMode }" class="min-h-screen flex flex-col">
+  <div class="min-h-screen flex flex-col">
     <!-- Header -->
     <header class="flex items-center justify-between lg:justify-start dark:bg-black py-4 px-3 sm:px-6 lg:px-8">
       <!-- University Logo -->
@@ -17,21 +17,22 @@
         </div>
       </div>
 
-      <!-- Toggle Dark Mode Icons -->
+      <!-- Theme toggle.  A real button, so it is reachable with Tab and
+           activated with Enter/Space, and it announces its current state. -->
       <div class="flex items-center space-x-4">
-        <!-- Sun Icon for light mode -->
-        <div v-if="!darkMode" @click="toggleDarkMode" class="cursor-pointer text-yellow-500">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="ml-9 w-10 h-10">
+        <button type="button" class="cursor-pointer bg-transparent border-0 p-2 text-yellow-500"
+          :aria-pressed="darkMode" aria-label="Toggle dark mode" @click="toggleDarkMode">
+          <!-- Sun icon while the light theme is active -->
+          <svg v-if="!darkMode" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+            stroke="currentColor" class="w-8 h-8">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" />
           </svg>
-        </div>
 
-        <!-- Moon Icon for dark mode -->
-        <div v-if="darkMode" @click="toggleDarkMode" class="cursor-pointer text-yellow-500">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class=" ml-8 w-6 h-6">
+          <!-- Moon icon while the dark theme is active -->
+          <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="w-6 h-6">
             <path d="M14.438 10.148c.19-.425-.321-.787-.748-.601A5.5 5.5 0 0 1 6.453 2.31c.186-.427-.176-.938-.6-.748a6.501 6.501 0 1 0 8.585 8.586Z" />
           </svg>
-        </div>
+        </button>
       </div>
     </header>
     <!-- Header ends -->
@@ -91,53 +92,40 @@
 </template>
 
 <script>
+import { applyTheme, initTheme, saveTheme } from "../theme";
+
 export default {
   name: "HomeComponent",
   data() {
     return {
-      darkMode: false, // Initialize the dark mode state
+      // Local mirror of <html>.dark, kept only so the icons and aria-pressed
+      // can re-render.  src/theme.js owns the actual preference.
+      darkMode: false,
       currentYear: new Date().getFullYear(),
     };
   },
   mounted() {
-    // Check localStorage for the dark mode preference
-    const savedDarkMode = localStorage.getItem("darkMode");
-    this.darkMode = savedDarkMode === "true";
-    document.documentElement.classList.toggle("dark", this.darkMode);
+    // Re-assert the theme on mount: the class is already on <html> from the
+    // bootstrap, so this only pulls the value into local state.
+    this.darkMode = initTheme();
   },
   methods: {
     toggleDarkMode() {
       this.darkMode = !this.darkMode;
-      // Apply dark mode class to the document's root element
-      document.documentElement.classList.toggle("dark", this.darkMode);
-      // Save the dark mode preference in localStorage
-      localStorage.setItem("darkMode", this.darkMode);
+      applyTheme(this.darkMode);
+      saveTheme(this.darkMode);
     },
   },
 };
 </script>
 
 <style scoped>
-html,
-body {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
+/* The theme used to be painted here, on a wrapper div.  It now lives on
+   <html> as a single switch (see src/theme.js + the token block in app.css),
+   so that dark mode survives navigation to every other route. */
 *,
 *::before,
 *::after {
   box-sizing: inherit;
-}
-
-body {
-  font-family: 'Inter', sans-serif;
-  transition: background-color 0.5s, color 0.5s;
-}
-
-.dark {
-  background-color: #121212;
-  color: white;
 }
 </style>
